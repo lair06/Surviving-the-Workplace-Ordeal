@@ -360,13 +360,13 @@
       age: 22,
       months: 0,
       health: 100,
-      isDead: false
+      isDead: false,
+      hasMetRichLady: false
     };
 
     // 🌟 極低機率隱藏事件：富婆相中
     const rareRichLadyEvent = {
       text: "💎 <b>【極稀有隱藏事件：紅塵仙緣】</b><br>一位身價千億的神秘富婆遞給你一張黑卡與豪宅鑰匙，深情地對你說：「別再職場修仙了，跟我走，我包養你一生一世！」",
-      isRare: true,
       choices: [
         { 
           text: "【雙宿雙飛】接過黑卡，化作一對鴛鴦遠走高飛，享盡天倫之樂！", 
@@ -383,6 +383,27 @@
 
     // 3. 隨性日常/爆笑事件庫
     const events = [
+      // 🚨 ================== 突發特別事件：公司大裁員 ================== 🚨
+      {
+        text: "🚨 <b>【突發天劫：公司大裁員】</b><br>仙界景氣寒冬降臨！公司宣佈進行『大規模組織優化（裁員）』，HR 與高層手持裁員大禮包在各部門殺紅了眼！",
+        choices: [
+          {
+            text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗",
+            specialOutcome: "laidOffEnding"
+          },
+          {
+            text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓",
+            specialOutcome: "jailGuardOutcome"
+          },
+          {
+            text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」",
+            health: -10,
+            salary: +3000,
+            log: "長官投鼠企棄，深怕系統崩潰被會長責罰，不僅不敢裁你，還被迫加薪安撫你的社畜怨念！"
+          }
+        ]
+      },
+
       // 🍃 --- 平淡無奇的日常 ---
       {
         text: "這個月公司平平淡淡，沒有什麼大事發生，你按部就班地上班下班。",
@@ -895,9 +916,11 @@
       state.months++;
       if (state.months % 12 === 0) state.age++;
 
-      // 🎲 3% 的極低機率觸發「富婆相中」隱藏事件
       let randomEvent;
-      if (Math.random() < 0.03) {
+
+      // 🎲 只有在一輩子還沒觸發過時，才進行 0.1% (0.001) 的極稀有判定
+      if (!state.hasMetRichLady && Math.random() < 0.001) {
+        state.hasMetRichLady = true;
         randomEvent = rareRichLadyEvent;
       } else {
         // 🎯 依據玩家當前年齡、職位鎖定機制過濾可用事件
@@ -927,6 +950,26 @@
             state.isDead = true;
             document.getElementById("event-text").innerHTML = `<b style="color:#eab308;">💖 隱藏結局【紅塵大圓滿】</b><br>你跟著富婆搭乘私人飛機遠走高飛，住進海景豪宅，終生不再需要為了 KPI 燃燒精血。你享盡了人間天倫之樂，成功脫離苦海！`;
             choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
+            return;
+          }
+
+          // ☠️ 觸發賣屁股裁員失敗結局
+          if (choice.specialOutcome === "laidOffEnding") {
+            state.isDead = true;
+            document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 結局【慘遭優化】</b><br>你試圖向長官投懷送抱賣屁股，不料被上級嚴重嫌棄，當場發送裁員大禮包！你無奈黯然離場，職場修仙之路就此終結！`;
+            choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎 (重新開始)</button>`;
+            return;
+          }
+
+          // 👮 觸發坐牢出獄當保全（第二人生）
+          if (choice.specialOutcome === "jailGuardOutcome") {
+            state.age += 10;
+            state.health = 100; // 獄中鍛鍊，健康補滿
+            addLog("⛓️ 你與長官大打出手被關了 10 年！出獄後長官賞識你一身武藝，聘請你回來當【保全尊者】，開啟職場第二人生！");
+            updateUI();
+            if (!state.isDead && state.salary < realms[state.realmIndex].nextSalary) {
+              nextTurn();
+            }
             return;
           }
 
@@ -974,7 +1017,7 @@
     }
 
     function resetGame() {
-      state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false };
+      state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false, hasMetRichLady: false };
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
       updateUI();
       nextTurn();
