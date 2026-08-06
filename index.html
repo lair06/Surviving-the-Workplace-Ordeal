@@ -5,267 +5,650 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>六人成虎 ‧ 職場修仙傳 ⚡</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background: #0f172a;
+      background: linear-gradient(rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.4)), 
+                  url("bg.jpg") no-repeat center center fixed;
+      background-size: cover;
       color: #e2e8f0;
-      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 15px;
-    }
-    .game-card {
-      background: rgba(30, 41, 59, 0.9);
-      border: 2px solid #38bdf8;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 500px;
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
       padding: 20px;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+      overflow-x: hidden;
+      position: relative;
     }
-    h1 { font-size: 1.5rem; text-align: center; color: #38bdf8; margin-bottom: 5px; }
-    .subtitle { font-size: 0.85rem; text-align: center; color: #94a3b8; margin-bottom: 15px; }
-    
-    /* 數值面板 */
+
+    /* 🌧️ 雷雨 Canvas 背景畫布 */
+    #weather-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* ⚡ 閃電全螢幕白光特效 */
+    .lightning-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.25);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 2;
+      transition: opacity 0.05s ease-out;
+    }
+
+    /* ↗️ 右上角工具列容器 */
+    .top-toolbar {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    /* 🔊 & 👁️ 通用頂部按鈕樣式 */
+    .audio-control, .toggle-ui-btn {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .audio-control:hover, .toggle-ui-btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+    }
+
+    /* 🎵 音樂下拉選單容器 */
+    .bgm-dropdown-container {
+      position: relative;
+    }
+
+    .bgm-menu {
+      display: none;
+      position: absolute;
+      top: 42px;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #38bdf8;
+      border-radius: 12px;
+      padding: 10px;
+      width: 175px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      backdrop-filter: blur(8px);
+      flex-direction: column;
+      gap: 6px;
+      z-index: 110;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .bgm-menu.show {
+      display: flex;
+    }
+
+    .bgm-menu-item, .bgm-track-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      text-align: left;
+      transition: all 0.2s ease;
+      font-weight: bold;
+    }
+
+    .bgm-menu-item:hover, .bgm-track-btn:hover {
+      border-color: #38bdf8;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
+
+    .bgm-track-btn.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.25);
+      color: #7dd3fc;
+    }
+
+    .menu-divider {
+      border: none;
+      border-top: 1px solid #334155;
+      margin: 2px 0;
+    }
+
+    .menu-label {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      padding: 2px 4px;
+    }
+
+    /* 📦 主要 UI 包裹區塊 */
+    .ui-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 520px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 10;
+    }
+
+    .ui-hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+    }
+
+    /* 🎮 遊戲卡片 */
+    .game-card {
+      background: rgba(15, 23, 42, 0.85);
+      border: 2px solid #38bdf8;
+      border-radius: 16px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.4);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-banner {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(56, 189, 248, 0.8);
+      letter-spacing: 0.15em;
+      font-weight: 900;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      letter-spacing: 0.1em;
+      margin-top: 5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* 📊 屬性面板 */
     .stats-panel {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      background: rgba(15, 23, 42, 0.8);
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      margin-bottom: 15px;
-      font-size: 0.9rem;
+      gap: 12px;
+      background: rgba(30, 41, 59, 0.7);
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #38bdf8;
+      margin-bottom: 18px;
+      font-size: 0.92rem;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
-    .stat-item span { color: #38bdf8; font-weight: bold; }
 
-    /* 事件區域 */
+    .stat-item {
+      color: #94a3b8;
+    }
+
+    .stat-item span {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    /* 📜 事件描述框 */
     .event-box {
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.7);
       border-left: 4px solid #38bdf8;
-      padding: 12px;
-      min-height: 80px;
-      margin-bottom: 15px;
-      font-size: 0.95rem;
-      line-height: 1.5;
+      padding: 14px;
+      min-height: 85px;
+      margin-bottom: 18px;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      border-radius: 0 8px 8px 0;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* 選擇題按鈕 */
-    .choices-container { display: flex; flex-direction: column; gap: 10px; }
+    /* 🎮 選擇按鈕 */
+    .choices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .choice-btn {
-      background: #1e293b;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border: 1px solid #38bdf8;
       color: #e2e8f0;
-      padding: 12px;
-      border-radius: 6px;
+      padding: 14px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       text-align: left;
       transition: all 0.2s ease;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+      line-height: 1.4;
     }
-    .choice-btn:hover { background: #38bdf8; color: #0f172a; font-weight: bold; }
-    
-    /* 日誌 */
+
+    .choice-btn:hover {
+      background: #38bdf8;
+      color: #0f172a;
+      font-weight: bold;
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.8);
+      transform: translateY(-2px);
+    }
+
+    .choice-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 📜 修仙履歷日誌 */
     .log-box {
-      margin-top: 15px;
-      background: #020617;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      color: #94a3b8;
-      max-height: 100px;
+      margin-top: 18px;
+      background: rgba(2, 6, 23, 0.85);
+      border: 1px solid #334155;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #7dd3fc;
+      max-height: 110px;
       overflow-y: auto;
+      line-height: 1.5;
     }
   </style>
 </head>
 <body>
 
-<div class="game-card">
-  <h1>六人成虎 ‧ 職場修仙傳 ⚡</h1>
-  <div class="subtitle">渡劫升官，抑或是過勞化身怨靈？</div>
+  <!-- 🌧️ 雨滴 Canvas 與 ⚡ 閃電遮罩 -->
+  <canvas id="weather-canvas"></canvas>
+  <div id="lightning" class="lightning-flash"></div>
 
-  <!-- 面板 -->
-  <div class="stats-panel">
-    <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
-    <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
-    <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲</div>
-    <div class="stat-item">健康度：<span id="health">100</span>%</div>
+  <!-- ↗️ 右上角功能按鈕列 -->
+  <div class="top-toolbar">
+    <button id="ui-btn" class="toggle-ui-btn" onclick="toggleUI()">👁️ </button>
+    
+    <!-- 🎵 音樂下拉選單 -->
+    <div class="bgm-dropdown-container">
+      <button id="bgm-btn" class="audio-control" onclick="toggleBgmMenu()">🎵 </button>
+      <div id="bgm-menu" class="bgm-menu">
+        <button id="bgm-toggle-btn" class="bgm-menu-item" onclick="toggleBGM()">▶️ 播放音樂</button>
+        <hr class="menu-divider">
+        <div class="menu-label">切換仙俠曲目：</div>
+        <button class="bgm-track-btn active" onclick="selectTrack(0, this)">🎼 仙俠曲目 一</button>
+        <button class="bgm-track-btn" onclick="selectTrack(1, this)">⚔️ 仙俠曲目 二</button>
+        <button class="bgm-track-btn" onclick="selectTrack(2, this)">🍃 仙俠曲目 三</button>
+      </div>
+    </div>
   </div>
 
-  <!-- 事件描述 -->
-  <div id="event-text" class="event-box">載入中...</div>
+  <!-- 🎵 音訊效果 -->
+  <audio id="bgm" loop src="bgm1.mp3"></audio>
+  <audio id="sfx-spin" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
+  <audio id="sfx-stop" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
-  <!-- 選項 -->
-  <div id="choices" class="choices-container"></div>
+  <!-- 📦 主要遊戲介面 -->
+  <div id="main-ui" class="ui-wrapper">
+    <div class="game-card">
+      <div class="header-banner">
+        <h1>六人成虎 ‧ 職場修仙傳 ⚡</h1>
+        <div class="subtitle">— 渡劫升官，抑或是過勞化身怨靈？ —</div>
+      </div>
 
-  <!-- 日誌 -->
-  <div id="game-log" class="log-box">修仙履歷展開...<br></div>
-</div>
+      <!-- 📊 屬性面板 -->
+      <div class="stats-panel">
+        <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
+        <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
+        <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲</div>
+        <div class="stat-item">健康度：<span id="health">100</span>%</div>
+      </div>
 
-<script>
-  // 1. 境界（公司職位）
-  const realms = [
-    { name: "試用實習生", minSalary: 28000, nextSalary: 35000 },
-    { name: "扣血社畜", minSalary: 35000, nextSalary: 48000 },
-    { name: "萬年組長", minSalary: 48000, nextSalary: 65000 },
-    { name: "甩鍋經理", minSalary: 65000, nextSalary: 90000 },
-    { name: "畫餅總監", minSalary: 90000, nextSalary: 150000 },
-    { name: "董事長 (飛昇)", minSalary: 150000, nextSalary: Infinity }
-  ];
+      <!-- 📜 事件描述區 -->
+      <div id="event-text" class="event-box">陣法讀取中...</div>
 
-  // 2. 玩家初始資料
-  let state = {
-    realmIndex: 0,
-    salary: 28000,
-    age: 22,
-    months: 0,
-    health: 100,
-    isDead: false
-  };
+      <!-- 🎮 選擇按鈕區 -->
+      <div id="choices" class="choices-container"></div>
 
-  // 3. 隨機事件庫
-  const events = [
-    {
-      text: "龜董突然在週五下班前 5 分鐘傳訊：「這個小改動很簡單，下週一開會要看。」",
-      choices: [
-        { text: "【硬幹渡劫】連夜加班做完", health: -15, salary: +2000, log: "你消耗了大量壽元，換來了龜董的一句「收到」。" },
-        { text: "【隱身心法】假裝沒看到訊息，週一再說", health: +5, salary: -500, log: "你順利保住壽元，但週一被評為「缺乏修仙主動性」。" },
-        { text: "【吸氣大法】吸收隔壁同仁的加班廢氣幫忙做", health: 0, salary: +1000, log: "隔壁同仁臉色發青，但你的進度順利完成！" }
-      ]
-    },
-    {
-      text: "丞董在茶水間偷偷塞給你一本《離職心法殘卷》，問你要不要一起跳槽。",
-      choices: [
-        { text: "【參悟心法】默默研讀，提升市場身價", health: 0, salary: +3000, log: "你對仙界履歷有了新的領悟，薪資潛力提升！" },
-        { text: "【告密長官】向長官檢舉丞董有反骨", health: -10, salary: +5000, log: "長官給了你獎金，但你在同門中的名聲毀於一旦。" }
-      ]
-    },
-    {
-      text: "6F 洗手間傳來陣陣靈氣（或怨氣），似乎有同門師兄在裡面偷懶爆發。",
-      choices: [
-        { text: "【深入渡劫】進去一起躲著滑手機 1 小時", health: +10, salary: 0, log: "身心靈獲得極大療癒，健康度提升。" },
-        { text: "【舉報霸位】回座位繼續寫 Code", health: -5, salary: +1000, log: "你內心充滿罪惡感，但工作進度推進了。" }
-      ]
+      <!-- 📜 修仙履歷日誌 -->
+      <div id="game-log" class="log-box">修仙履歷展開...<br></div>
+    </div>
+  </div>
+
+  <script>
+    // 1. 境界（公司職位）
+    const realms = [
+      { name: "試用實習生", minSalary: 28000, nextSalary: 35000 },
+      { name: "扣血社畜", minSalary: 35000, nextSalary: 48000 },
+      { name: "萬年組長", minSalary: 48000, nextSalary: 65000 },
+      { name: "甩鍋經理", minSalary: 65000, nextSalary: 90000 },
+      { name: "畫餅總監", minSalary: 90000, nextSalary: 150000 },
+      { name: "董事長 (飛昇)", minSalary: 150000, nextSalary: Infinity }
+    ];
+
+    // 2. 玩家初始狀態
+    let state = {
+      realmIndex: 0,
+      salary: 28000,
+      age: 22,
+      months: 0,
+      health: 100,
+      isDead: false
+    };
+
+    // 3. 爆笑沙雕隨機事件庫
+    const events = [
+      {
+        text: "龜董突然在週五下班前 5 分鐘傳訊：「這個小改動很簡單，下週一開會要看。」",
+        choices: [
+          { text: "【硬幹渡劫】連夜加班做完", health: -15, salary: +2000, log: "你消耗了大量壽元，換來龜董一句「收到」。" },
+          { text: "【隱身心法】假裝沒看到訊息，週一再說", health: +5, salary: -500, log: "你順利保住壽元，但週一被評為「缺乏修仙主動性」。" },
+          { text: "【吸氣大法】強行吸收隔壁同仁的加班廢氣幫忙", health: 0, salary: +1000, log: "隔壁同仁臉色發青，但你的進度順利完成！" }
+        ]
+      },
+      {
+        text: "同門丞董偷偷塞給你一本《離職心法殘卷》，問你要不要一起跳槽。",
+        choices: [
+          { text: "【參悟心法】默默研讀，提升市場身價", health: 0, salary: +3000, log: "你對仙界履歷有了新的領悟，薪資潛力提升！" },
+          { text: "【告密長官】向長官舉報丞董有反骨", health: -10, salary: +5000, log: "長官給了你獎金，但你在同門中的名聲毀於一旦。" }
+        ]
+      },
+      {
+        text: "6F 洗手間傳來陣陣靈氣（或怨氣），似乎有同門師兄在裡面偷懶爆發。",
+        choices: [
+          { text: "【深入渡劫】進去一起躲著滑手機 1 小時", health: +10, salary: 0, log: "身心靈獲得極大療癒，健康度提升。" },
+          { text: "【舉報霸位】回座位繼續寫 Code", health: -5, salary: +1000, log: "你內心充滿罪惡感，但工作進度推進了。" }
+        ]
+      },
+      {
+        text: "捲爺魔尊發動技能「無預警增加 KPI」，要求本月業績翻倍。",
+        choices: [
+          { text: "【燃燒精血】拼命加班達成目標", health: -20, salary: +4000, log: "你突破了極限，但也離極樂世界更近一步。" },
+          { text: "【擺爛金身】無視命令，繼續按時下班", health: +10, salary: -1000, log: "捲爺對你無可奈何，但扣了你的績效獎金。" }
+        ]
+      }
+    ];
+
+    // 4. 荒謬死法庫
+    const absurdDeaths = [
+      "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
+      "被龜董畫的「未來公司上市分紅」大餅當場噎死。",
+      "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
+      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
+    ];
+
+    // 🎶 本地 Repo 音樂路徑設定
+    const bgmTracks = [
+      "bgm1.mp3",
+      "bgm2.mp3",
+      "bgm3.mp3"
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlayingBGM = false;
+    let isUiHidden = false;
+
+    function toggleBgmMenu() {
+      const menu = document.getElementById("bgm-menu");
+      menu.classList.toggle("show");
     }
-  ];
 
-  // 4. 荒謬死法庫
-  const absurdDeaths = [
-    "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
-    "被龜董畫的「未來公司上市分紅」大餅當場噎死。",
-    "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
-    "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
-  ];
+    window.addEventListener('click', (e) => {
+      const container = document.querySelector('.bgm-dropdown-container');
+      if (container && !container.contains(e.target)) {
+        document.getElementById("bgm-menu")?.classList.remove("show");
+      }
+    });
 
-  function updateUI() {
-    document.getElementById("realm").innerText = realms[state.realmIndex].name;
-    document.getElementById("salary").innerText = state.salary.toLocaleString();
-    document.getElementById("age").innerText = state.age;
-    document.getElementById("health").innerText = state.health;
+    function toggleBGM() {
+      const bgm = document.getElementById("bgm");
+      const toggleBtn = document.getElementById("bgm-toggle-btn");
+      const bgmMainBtn = document.getElementById("bgm-btn");
 
-    checkStatus();
-  }
-
-  function addLog(text) {
-    const logBox = document.getElementById("game-log");
-    logBox.innerHTML = `> ${text}<br>` + logBox.innerHTML;
-  }
-
-  function checkStatus() {
-    if (state.health <= 0) {
-      state.isDead = true;
-      const deathReason = absurdDeaths[Math.floor(Math.random() * absurdDeaths.length)];
-      document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 渡劫失敗（身亡）</b><br>${deathReason}`;
-      document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎 (重新開始)</button>`;
-      return;
+      if (!isPlayingBGM) {
+        bgm.play().then(() => {
+          toggleBtn.innerText = "⏸️ 關閉音樂";
+          bgmMainBtn.innerText = "🔊 ";
+          isPlayingBGM = true;
+        }).catch(e => {
+          console.warn("Autoplay Error:", e);
+        });
+      } else {
+        bgm.pause();
+        toggleBtn.innerText = "▶️ 播放音樂";
+        bgmMainBtn.innerText = "🎵 ";
+        isPlayingBGM = false;
+      }
     }
 
-    if (state.age >= 65) {
-      document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 渡劫大圓滿（安全退休）</b><br>你順利活到 65 歲，帶著足夠的退休金離開職場修仙界！`;
-      document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再體驗一次職場修仙</button>`;
-      return;
+    function selectTrack(index, btnElement) {
+      currentTrackIndex = index;
+      const bgm = document.getElementById("bgm");
+      
+      bgm.pause();
+      bgm.src = bgmTracks[index];
+      bgm.load();
+
+      document.querySelectorAll('.bgm-track-btn').forEach(btn => btn.classList.remove('active'));
+      if (btnElement) btnElement.classList.add('active');
+
+      if (isPlayingBGM) {
+        bgm.play().catch(e => console.log("Play interrupted:", e));
+      } else {
+        toggleBGM();
+      }
     }
 
-    // 檢查是否達到「升官渡劫」標準
-    const currentRealm = realms[state.realmIndex];
-    if (state.salary >= currentRealm.nextSalary && state.realmIndex < realms.length - 1) {
-      triggerTribulation();
+    function toggleUI() {
+      const mainUi = document.getElementById("main-ui");
+      const uiBtn = document.getElementById("ui-btn");
+
+      if (!isUiHidden) {
+        mainUi.classList.add("ui-hidden");
+        uiBtn.innerText = "👁️ ";
+        isUiHidden = true;
+      } else {
+        mainUi.classList.remove("ui-hidden");
+        uiBtn.innerText = "👁️ ";
+        isUiHidden = false;
+      }
     }
-  }
 
-  function nextTurn() {
-    if (state.isDead) return;
+    // 🌧️⚡ 下雨 + 閃電動畫引擎
+    function initWeatherEffect() {
+      const canvas = document.getElementById('weather-canvas');
+      const ctx = canvas.getContext('2d');
+      const lightning = document.getElementById('lightning');
 
-    state.months++;
-    if (state.months % 12 === 0) state.age++;
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
 
-    // 隨機選事件
-    const randomEvent = events[Math.floor(Math.random() * events.length)];
-    document.getElementById("event-text").innerText = randomEvent.text;
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
 
-    const choicesContainer = document.getElementById("choices");
-    choicesContainer.innerHTML = "";
+      const rainDrops = [];
+      for (let i = 0; i < 150; i++) {
+        rainDrops.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          length: Math.random() * 20 + 10,
+          speed: Math.random() * 10 + 15,
+          opacity: Math.random() * 0.4 + 0.2
+        });
+      }
 
-    randomEvent.choices.forEach(choice => {
-      const btn = document.createElement("button");
-      btn.className = "choice-btn";
-      btn.innerText = choice.text;
-      btn.onclick = () => {
-        state.health += choice.health;
-        state.salary += choice.salary;
-        if (state.health > 100) state.health = 100;
-        addLog(choice.log);
-        updateUI();
-        if (!state.isDead && state.salary < realms[state.realmIndex].nextSalary) {
+      function render() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+
+        rainDrops.forEach(drop => {
+          ctx.beginPath();
+          ctx.moveTo(drop.x, drop.y);
+          ctx.lineTo(drop.x - 2, drop.y + drop.length);
+          ctx.stroke();
+
+          drop.y += drop.speed;
+          drop.x -= 1;
+
+          if (drop.y > height) {
+            drop.y = -drop.length;
+            drop.x = Math.random() * width;
+          }
+        });
+
+        if (Math.random() < 0.015) {
+          lightning.style.opacity = '1';
+          setTimeout(() => { lightning.style.opacity = '0'; }, 60);
+          setTimeout(() => { 
+            if (Math.random() < 0.5) {
+              lightning.style.opacity = '0.8';
+              setTimeout(() => { lightning.style.opacity = '0'; }, 40);
+            }
+          }, 100);
+        }
+
+        requestAnimationFrame(render);
+      }
+
+      render();
+    }
+
+    // 🎮 遊戲核心邏輯
+    function updateUI() {
+      document.getElementById("realm").innerText = realms[state.realmIndex].name;
+      document.getElementById("salary").innerText = state.salary.toLocaleString();
+      document.getElementById("age").innerText = state.age;
+      document.getElementById("health").innerText = state.health;
+
+      checkStatus();
+    }
+
+    function addLog(text) {
+      const logBox = document.getElementById("game-log");
+      logBox.innerHTML = `> ${text}<br>` + logBox.innerHTML;
+    }
+
+    function checkStatus() {
+      if (state.health <= 0) {
+        state.isDead = true;
+        const deathReason = absurdDeaths[Math.floor(Math.random() * absurdDeaths.length)];
+        document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 渡劫失敗（身亡）</b><br>${deathReason}`;
+        document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎 (重新開始)</button>`;
+        return;
+      }
+
+      if (state.age >= 65) {
+        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 渡劫大圓滿（安全退休）</b><br>你順利活到 65 歲，帶著足夠的退休金離開職場修仙界！`;
+        document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再體驗一次職場修仙</button>`;
+        return;
+      }
+
+      const currentRealm = realms[state.realmIndex];
+      if (state.salary >= currentRealm.nextSalary && state.realmIndex < realms.length - 1) {
+        triggerTribulation();
+      }
+    }
+
+    function nextTurn() {
+      if (state.isDead) return;
+
+      state.months++;
+      if (state.months % 12 === 0) state.age++;
+
+      const randomEvent = events[Math.floor(Math.random() * events.length)];
+      document.getElementById("event-text").innerText = randomEvent.text;
+
+      const choicesContainer = document.getElementById("choices");
+      choicesContainer.innerHTML = "";
+
+      randomEvent.choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.innerText = choice.text;
+        btn.onclick = () => {
+          document.getElementById("sfx-spin").play().catch(e => {});
+          state.health += choice.health;
+          state.salary += choice.salary;
+          if (state.health > 100) state.health = 100;
+          addLog(choice.log);
+          updateUI();
+          if (!state.isDead && state.salary < realms[state.realmIndex].nextSalary) {
+            nextTurn();
+          }
+        };
+        choicesContainer.appendChild(btn);
+      });
+    }
+
+    function triggerTribulation() {
+      const nextRealm = realms[state.realmIndex + 1];
+      document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>你的修為 (薪資) 已達標！長官準備評估你是否能升任為 <b>${nextRealm.name}</b>！`;
+      
+      const choicesContainer = document.getElementById("choices");
+      choicesContainer.innerHTML = "";
+
+      const passBtn = document.createElement("button");
+      passBtn.className = "choice-btn";
+      passBtn.innerText = "⚡ 接受考績天劫審查";
+      passBtn.onclick = () => {
+        document.getElementById("sfx-stop").play().catch(e => {});
+        const successRate = state.health / 100;
+        if (Math.random() < successRate) {
+          state.realmIndex++;
+          addLog(`✨ 渡劫成功！升任為【${nextRealm.name}】！`);
+          updateUI();
           nextTurn();
+        } else {
+          state.health -= 30;
+          addLog(`❌ 渡劫失敗！被長官評定「態度不佳」，健康度大幅下降！`);
+          updateUI();
+          if (state.health > 0) nextTurn();
         }
       };
-      choicesContainer.appendChild(btn);
-    });
-  }
+      choicesContainer.appendChild(passBtn);
+    }
 
-  // 升官渡劫關卡
-  function triggerTribulation() {
-    const nextRealm = realms[state.realmIndex + 1];
-    document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>你的修為 (薪資) 已達標！長官準備評估你是否能升任為 <b>${nextRealm.name}</b>！`;
-    
-    const choicesContainer = document.getElementById("choices");
-    choicesContainer.innerHTML = "";
+    function resetGame() {
+      state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false };
+      document.getElementById("game-log").innerHTML = "重新投胎...<br>";
+      updateUI();
+      nextTurn();
+    }
 
-    const passBtn = document.createElement("button");
-    passBtn.className = "choice-btn";
-    passBtn.innerText = "⚡ 接受考績天劫審查";
-    passBtn.onclick = () => {
-      // 渡劫成功率取決於健康度
-      const successRate = state.health / 100;
-      if (Math.random() < successRate) {
-        state.realmIndex++;
-        addLog(`✨ 渡劫成功！升任為【${nextRealm.name}】！`);
-        updateUI();
-        nextTurn();
-      } else {
-        state.health -= 30;
-        addLog(`❌ 渡劫失敗！被長官評定「態度不佳」，健康度大幅下降！`);
-        updateUI();
-        if (state.health > 0) nextTurn();
-      }
+    window.onload = () => {
+      initWeatherEffect();
+      updateUI();
+      nextTurn();
     };
-    choicesContainer.appendChild(passBtn);
-  }
-
-  function resetGame() {
-    state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false };
-    document.getElementById("game-log").innerHTML = "重新投胎...<br>";
-    updateUI();
-    nextTurn();
-  }
-
-  // 初始化
-  updateUI();
-  nextTurn();
-</script>
+  </script>
 </body>
 </html>
