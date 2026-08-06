@@ -309,8 +309,8 @@
     </div>
   </div>
 
-  <!-- 🎵 音訊效果 -->
-  <audio id="bgm" loop src="bgm1.mp3"></audio>
+  <!-- 🎵 音訊效果 (去掉 loop 以便自動播放下一首) -->
+  <audio id="bgm" src="bgm1.mp3"></audio>
   <audio id="sfx-spin" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
   <audio id="sfx-stop" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
@@ -362,35 +362,89 @@
       isDead: false
     };
 
-    // 3. 爆笑沙雕隨機事件庫
+    // 3. 爆笑沙雕隨機事件庫 (整合公司全體神仙人物)
     const events = [
+      // --- 幕僚檢督 ---
       {
-        text: "龜董突然在週五下班前 5 分鐘傳訊：「這個小改動很簡單，下週一開會要看。」",
+        text: "幕僚檢督人「塵協理」開啟天劫法眼巡視各部門，眼神所到之處皆為焦土！",
         choices: [
-          { text: "【硬幹渡劫】連夜加班做完", health: -15, salary: +2000, log: "你消耗了大量壽元，換來龜董一句「收到」。" },
-          { text: "【隱身心法】假裝沒看到訊息，週一再說", health: +5, salary: -500, log: "你順利保住壽元，但週一被評為「缺乏修仙主動性」。" },
-          { text: "【吸氣大法】強行吸收隔壁同仁的加班廢氣幫忙", health: 0, salary: +1000, log: "隔壁同仁臉色發青，但你的進度順利完成！" }
+          { text: "【端正坐姿】敲擊鍵盤發出陣陣修仙陣響", health: -5, salary: +1000, log: "塵協理點了點頭，認為你頗具社畜慧根。" },
+          { text: "【隱身遁形】瞬間壓低螢幕視窗切換成 Excel", health: +5, salary: 0, log: "你成功避開法眼，保住一口真氣。" }
+        ]
+      },
+
+      // --- 行銷企劃 & 美編 ---
+      {
+        text: "行銷企畫「榴主任」與「黃尾」聯手發起【爆款文案大陣】，要求 10 分鐘內產出 100 個提案！",
+        choices: [
+          { text: "【ChatGPT 附體】召喚 AI 靈寵生成文案", health: 0, salary: +2000, log: "榴主任與黃尾大為震撼，讚賞你的靈寵法力無邊！" },
+          { text: "【強行燃血】硬寫到腦袋發麻", health: -15, salary: +1500, log: "文案順利通過，但你的腦細胞大量損耗。" }
         ]
       },
       {
-        text: "同門丞董偷偷塞給你一本《離職心法殘卷》，問你要不要一起跳槽。",
+        text: "行銷美編「瘀華」與「捲爺」面容枯槁，丟出一份名為《V99_最終版_真的最後改.psd》的修仙圖檔。",
         choices: [
-          { text: "【參悟心法】默默研讀，提升市場身價", health: 0, salary: +3000, log: "你對仙界履歷有了新的領悟，薪資潛力提升！" },
-          { text: "【告密長官】向長官舉報丞董有反骨", health: -10, salary: +5000, log: "長官給了你獎金，但你在同門中的名聲毀於一旦。" }
+          { text: "【送上咖啡】祭出續命靈藥安撫美編", health: +5, salary: -500, log: "瘀華與捲爺大受感動，決定幫你的圖稿優先排版！" },
+          { text: "【提出微調】「這裡能不能再放大一點加個光暈？」", health: -20, salary: 0, log: "捲爺發怒觸發「美編怨念天劫」，你的健康度大幅下降！" }
         ]
       },
+
+      // --- 採購 ---
+      {
+        text: "採購經理「症經理」與「林小姐」砍價法術大發，要求你找便宜 50% 的靈石（供應商）。",
+        choices: [
+          { text: "【施展話術】對供應商展開修仙式道德綁架", health: -10, salary: +3000, log: "成功的將價格砍下，症經理與林小姐大加讚賞！" },
+          { text: "【攤手擺爛】「這個價格真的買不到啊！」", health: 0, salary: -1000, log: "採購部門對你施加「資材凍結術」。" }
+        ]
+      },
+
+      // --- 人資部 ---
+      {
+        text: "人資四多花「琳達、珈稜、熟君、莉鏡」四位仙姑佈下【考績天劫陣】，對你進行心靈審問。",
+        choices: [
+          { text: "【極致畫餅】講述自己對公司未來 10 年的修仙規劃", health: -5, salary: +4000, log: "四仙姑深受感動，評定你為優秀弟子！" },
+          { text: "【實話實說】「我只是來賺錢買飯吃的。」", health: +10, salary: -2000, log: "四仙姑搖了搖頭，記錄下你的心魔過重。" }
+        ]
+      },
+      {
+        text: "人資「丞董」悄悄走過來，掏出一本光芒四射的《離職心法殘卷》，原來他即將飛昇跳槽！",
+        choices: [
+          { text: "【參悟傳承】向丞董討教飛昇密技", health: +10, salary: +2000, log: "你領悟了「仙界履歷包裝術」，市場身價提升！" },
+          { text: "【熱情祝福】祝賀丞董脫離苦海", health: +5, salary: 0, log: "丞董給了你一顆靈石（請你喝手搖飲）。" }
+        ]
+      },
+      {
+        text: "人資「噸鳴」發動「神龍見首不見尾」大術：早上 8 點進公司、9 點出門，下午 4 點回來、5 點下班，總結：極度忙碌！",
+        choices: [
+          { text: "【堵人蓋章】在其出沒的黃金 10 分鐘內發動攔截", health: -5, salary: +1500, log: "成功攔截噸鳴蓋到章！公文順利推進！" },
+          { text: "【錯過時機】等你想找人時，噸鳴早已遁地離去", health: 0, salary: 0, log: "你只能對著空的辦公桌發呆。" }
+        ]
+      },
+
+      // --- 教育中心 ---
+      {
+        text: "教育中心「小輓、星蚊、龜董、柯董」發起全員精神洗腦大會【職場心靈渡劫課】！",
+        choices: [
+          { text: "【閉目冥想】表面點頭，實則坐在後排閉目養神", health: +15, salary: 0, log: "獲得極佳的睡眠，健康度大幅提升！" },
+          { text: "【積極互動】舉手回答龜董與柯董的靈魂發問", health: -10, salary: +2500, log: "獲得龜董讚許，獎勵修為提升！" }
+        ]
+      },
+
+      // --- 資訊中心 ---
+      {
+        text: "你的電腦系統突然崩潰！緊急聯繫資訊中心「煌經理」，結果獲得【已讀亂回】貼圖連發！",
+        choices: [
+          { text: "【召喚資訊天團】轉向尋求廖董、周先生、許先生、謝先生救援", health: +5, salary: +1000, log: "資訊天團發動「重開機大術」，系統瞬間恢復！" },
+          { text: "【繼續跟煌經理對話】試圖解讀已讀亂回背後的玄機", health: -15, salary: 0, log: "你走火入魔，陷入深深的自我懷疑。" }
+        ]
+      },
+
+      // --- 經典職場事件 ---
       {
         text: "6F 洗手間傳來陣陣靈氣（或怨氣），似乎有同門師兄在裡面偷懶爆發。",
         choices: [
           { text: "【深入渡劫】進去一起躲著滑手機 1 小時", health: +10, salary: 0, log: "身心靈獲得極大療癒，健康度提升。" },
           { text: "【舉報霸位】回座位繼續寫 Code", health: -5, salary: +1000, log: "你內心充滿罪惡感，但工作進度推進了。" }
-        ]
-      },
-      {
-        text: "捲爺魔尊發動技能「無預警增加 KPI」，要求本月業績翻倍。",
-        choices: [
-          { text: "【燃燒精血】拼命加班達成目標", health: -20, salary: +4000, log: "你突破了極限，但也離極樂世界更近一步。" },
-          { text: "【擺爛金身】無視命令，繼續按時下班", health: +10, salary: -1000, log: "捲爺對你無可奈何，但扣了你的績效獎金。" }
         ]
       }
     ];
@@ -413,6 +467,37 @@
     let currentTrackIndex = 0;
     let isPlayingBGM = false;
     let isUiHidden = false;
+
+    // 🎧 初始化音樂監聽：自動播放下一首＋無限循環
+    function initAudio() {
+      const bgm = document.getElementById("bgm");
+      
+      // 當目前曲目播放完畢，自動切換至下一首
+      bgm.addEventListener("ended", () => {
+        currentTrackIndex = (currentTrackIndex + 1) % bgmTracks.length; // 自動循環回到第 1 首
+        playTrack(currentTrackIndex);
+      });
+    }
+
+    function playTrack(index) {
+      currentTrackIndex = index;
+      const bgm = document.getElementById("bgm");
+      
+      bgm.pause();
+      bgm.src = bgmTracks[index];
+      bgm.load();
+
+      // 更新選單標示
+      const trackBtns = document.querySelectorAll('.bgm-track-btn');
+      trackBtns.forEach((btn, i) => {
+        if (i === index) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      if (isPlayingBGM) {
+        bgm.play().catch(e => console.log("Play interrupted:", e));
+      }
+    }
 
     function toggleBgmMenu() {
       const menu = document.getElementById("bgm-menu");
@@ -448,21 +533,8 @@
     }
 
     function selectTrack(index, btnElement) {
-      currentTrackIndex = index;
-      const bgm = document.getElementById("bgm");
-      
-      bgm.pause();
-      bgm.src = bgmTracks[index];
-      bgm.load();
-
-      document.querySelectorAll('.bgm-track-btn').forEach(btn => btn.classList.remove('active'));
-      if (btnElement) btnElement.classList.add('active');
-
-      if (isPlayingBGM) {
-        bgm.play().catch(e => console.log("Play interrupted:", e));
-      } else {
-        toggleBGM();
-      }
+      playTrack(index);
+      if (!isPlayingBGM) toggleBGM();
     }
 
     function toggleUI() {
@@ -645,6 +717,7 @@
     }
 
     window.onload = () => {
+      initAudio(); // 初始化音樂自動播放下一首與循環
       initWeatherEffect();
       updateUI();
       nextTurn();
