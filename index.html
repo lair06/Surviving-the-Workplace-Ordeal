@@ -27,7 +27,6 @@
       position: relative;
     }
 
-    /* 🌧️ 雷雨 Canvas 背景畫布 */
     #weather-canvas {
       position: fixed;
       top: 0;
@@ -38,7 +37,6 @@
       z-index: 1;
     }
 
-    /* ⚡ 閃電全螢幕白光特效 */
     .lightning-flash {
       position: fixed;
       top: 0;
@@ -52,7 +50,6 @@
       transition: opacity 0.05s ease-out;
     }
 
-    /* ↗️ 右上角工具列容器 */
     .top-toolbar {
       position: fixed;
       top: 15px;
@@ -62,7 +59,6 @@
       z-index: 100;
     }
 
-    /* 🔊 & 👁️ 通用頂部按鈕樣式 */
     .audio-control, .toggle-ui-btn {
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid #38bdf8;
@@ -83,7 +79,6 @@
       box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
     }
 
-    /* 🎵 音樂下拉選單容器 */
     .bgm-dropdown-container {
       position: relative;
     }
@@ -152,7 +147,6 @@
       padding: 2px 4px;
     }
 
-    /* 📦 主要 UI 包裹區塊 */
     .ui-wrapper {
       display: flex;
       flex-direction: column;
@@ -169,7 +163,6 @@
       transform: scale(0.96);
     }
 
-    /* 🎮 遊戲卡片 */
     .game-card {
       background: rgba(15, 23, 42, 0.85);
       border: 2px solid #38bdf8;
@@ -201,7 +194,6 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* 📊 屬性面板 */
     .stats-panel {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -224,7 +216,6 @@
       font-weight: bold;
     }
 
-    /* 📜 事件描述框 */
     .event-box {
       background: rgba(15, 23, 42, 0.7);
       border-left: 4px solid #38bdf8;
@@ -237,7 +228,6 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
-    /* 🎮 選擇按鈕 */
     .choices-container {
       display: flex;
       flex-direction: column;
@@ -270,7 +260,6 @@
       transform: translateY(1px);
     }
 
-    /* 📜 修仙履歷日誌 */
     .log-box {
       margin-top: 18px;
       background: rgba(2, 6, 23, 0.85);
@@ -283,19 +272,83 @@
       overflow-y: auto;
       line-height: 1.5;
     }
+
+    /* 🎭 出身選擇彈窗 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(2, 6, 23, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-card {
+      background: rgba(15, 23, 42, 0.95);
+      border: 2px solid #38bdf8;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.5);
+      text-align: center;
+    }
+
+    .bg-option-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+
+    .bg-option-btn:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
   </style>
 </head>
 <body>
 
-  <!-- 🌧️ 雨滴 Canvas 與 ⚡ 閃電遮罩 -->
+  <!-- 🎭 出身選擇彈窗 -->
+  <div id="origin-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h2 style="color: #38bdf8; margin-bottom: 10px;">⚡ 選擇你的職場出身 ⚡</h2>
+      <p style="font-size: 0.88rem; color: #cbd5e1; margin-bottom: 15px;">不同的出身將決定你的初始氣運與職場體質！</p>
+      
+      <button class="bg-option-btn" onclick="selectOrigin('rich')">
+        <b style="color: #facc15;">🏰 富家子弟</b><br>
+        <span style="font-size: 0.82rem; color: #94a3b8;">有利條件：初始修為 +20,000、起步直升【扣血社畜】、免受部分扣血懲罰！</span>
+      </button>
+
+      <button class="bg-option-btn" onclick="selectOrigin('normal')">
+        <b style="color: #38bdf8;">🏠 平民百姓</b><br>
+        <span style="font-size: 0.82rem; color: #94a3b8;">標準開局：無特殊加成與負面條件，依靠自身努力渡劫。</span>
+      </button>
+
+      <button class="bg-option-btn" onclick="selectOrigin('beggar')">
+        <b style="color: #ef4444;">🪨 街頭乞丐</b><br>
+        <span style="font-size: 0.82rem; color: #94a3b8;">負面條件：初始健康 -30、初始修為僅 22,000、所有扣血事件額外損耗！</span>
+      </button>
+    </div>
+  </div>
+
   <canvas id="weather-canvas"></canvas>
   <div id="lightning" class="lightning-flash"></div>
 
-  <!-- ↗️ 右上角功能按鈕列 -->
   <div class="top-toolbar">
     <button id="ui-btn" class="toggle-ui-btn" onclick="toggleUI()">👁️ </button>
     
-    <!-- 🎵 音樂下拉選單 -->
     <div class="bgm-dropdown-container">
       <button id="bgm-btn" class="audio-control" onclick="toggleBgmMenu()">🎵 </button>
       <div id="bgm-menu" class="bgm-menu">
@@ -309,12 +362,10 @@
     </div>
   </div>
 
-  <!-- 🎵 音訊效果 -->
   <audio id="bgm" src="bgm1.mp3"></audio>
   <audio id="sfx-spin" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
   <audio id="sfx-stop" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
 
-  <!-- 📦 主要遊戲介面 -->
   <div id="main-ui" class="ui-wrapper">
     <div class="game-card">
       <div class="header-banner">
@@ -322,27 +373,21 @@
         <div class="subtitle">— 幹到 100 歲飛昇，抑或是過勞化身怨靈？ —</div>
       </div>
 
-      <!-- 📊 屬性面板 -->
       <div class="stats-panel">
+        <div class="stat-item">出身：<span id="origin-name">未選擇</span></div>
         <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
         <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
         <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲 / 100</div>
         <div class="stat-item">健康度：<span id="health">100</span>%</div>
       </div>
 
-      <!-- 📜 事件描述區 -->
-      <div id="event-text" class="event-box">陣法讀取中...</div>
-
-      <!-- 🎮 選擇按鈕區 -->
+      <div id="event-text" class="event-box">請選擇出身開局...</div>
       <div id="choices" class="choices-container"></div>
-
-      <!-- 📜 修仙履歷日誌 -->
       <div id="game-log" class="log-box">修仙履歷展開...<br></div>
     </div>
   </div>
 
   <script>
-    // 1. 境界（公司職位）
     const realms = [
       { name: "試用實習生", minSalary: 28000, nextSalary: 35000 },
       { name: "扣血社畜", minSalary: 35000, nextSalary: 48000 },
@@ -353,8 +398,8 @@
       { name: "萬年老顧問 (幹到死)", minSalary: 250000, nextSalary: Infinity }
     ];
 
-    // 2. 玩家初始狀態
     let state = {
+      origin: "normal", // "rich", "normal", "beggar"
       realmIndex: 0,
       salary: 28000,
       age: 22,
@@ -364,7 +409,27 @@
       hasMetRichLady: false
     };
 
-    // 🌟 極低機率隱藏事件：富婆相中
+    function selectOrigin(type) {
+      state.origin = type;
+      document.getElementById("origin-modal").style.display = "none";
+
+      if (type === "rich") {
+        state.salary = 48000;
+        state.realmIndex = 1; // 直升扣血社畜
+        state.health = 100;
+        addLog("🏰 【富家子弟】開局！帶著家族資源空降公司，初始修為大幅提升！");
+      } else if (type === "beggar") {
+        state.salary = 22000;
+        state.health = 70; // 初始健康打折
+        addLog("🪨 【街頭乞丐】開局！體力透支且身無分文，職場路途極度艱辛！");
+      } else {
+        addLog("🏠 【平民百姓】開局！踏實努力，步步為營。");
+      }
+
+      updateUI();
+      nextTurn();
+    }
+
     const rareRichLadyEvent = {
       text: "💎 <b>【極稀有隱藏事件：紅塵仙緣】</b><br>一位身價千億的神秘富婆遞給你一張黑卡與豪宅鑰匙，深情地對你說：「別再職場修仙了，跟我走，我包養你一生一世！」",
       choices: [
@@ -381,383 +446,66 @@
       ]
     };
 
-    // 3. 隨性日常/爆笑事件庫
     const events = [
-      // 💥 ================== 必扣雙屬性社畜暴擊事件 ================== 💥
       {
         text: "同組同仁突然請長假去度假，主管直接把對方留下的龐大專案爛攤子全扔給你接手！",
         choices: [
-          { text: "【默默熬夜接手】燃燒肝臟連夜加班補救", health: -15, salary: -1000, log: "爛攤子勉強收尾，但你自費買宵夜且體力透支，健康與薪資雙雙下滑！" },
-          { text: "【甩給實習生】分派給實習生處理，結果實習生出包連累你", health: -5, salary: -2000, log: "實習生嚴重出包，身為導師的你被公司扣除績效獎金！" }
+          { text: "【默默熬夜接手】燃燒肝臟連夜加班補救", health: -15, salary: -1000, log: "爛攤子勉強收尾，健康與薪資雙雙下滑！" },
+          { text: "【甩給實習生】分派給實習生處理，結果實習生出包連累你", health: -5, salary: -2000, log: "實習生嚴重出包，你被扣除績效獎金！" }
         ]
       },
       {
         text: "公司爆發嚴重產品品質危機上新聞！老闆為了保住高層顏面，要你這個基石出面坦傷背鍋！",
         choices: [
-          { text: "【召開記者會】面帶微笑向全體大眾鞠躬道歉坦傷", health: -25, salary: -3000, log: "替公司擋下了輿論子彈，但你被記了大過並扣發當月績效！" },
-          { text: "【發聲明稿澄清】熬夜寫公關稿，被網友與老闆雙重暴擊", health: -15, salary: -1500, log: "公關稿被網友罵翻，老闆怪你辦事不力，扣除修為！" }
+          { text: "【召開記者會】面帶微笑向全體大眾鞠躬道歉坦傷", health: -25, salary: -3000, log: "替公司擋下了輿論子彈，但你被記大過扣薪！" },
+          { text: "【發聲明稿澄清】熬夜寫公關稿，被網友與老闆雙重暴擊", health: -15, salary: -1500, log: "公關稿被網友罵翻，老闆怪你辦事不力！" }
         ]
       },
       {
         text: "全公司唯一的廁所突然管線爆裂大維修！整天無法順暢排解生理壓力，大家怨氣沖天！",
         choices: [
-          { text: "【硬吞強忍】憋尿憋便一整天，內力嚴重失調", health: -20, salary: -500, log: "忍到差點走火入魔！器官嚴重受損，還自費去看了診所中醫！" },
-          { text: "【跑去對面超商】為了上廁所頻繁離開座位，被迫消費買咖啡", health: -10, salary: -1000, log: "被主管質疑工作時間離座，扣除當月出勤獎金！" }
+          { text: "【硬吞強忍】憋尿憋便一整天，內力嚴重失調", health: -20, salary: -500, log: "忍到差點走火入魔！器官嚴重受損！" },
+          { text: "【跑去對面超商】為了上廁所頻繁離座，被迫消費買咖啡", health: -10, salary: -1000, log: "被主管質疑離座，扣除當月出勤獎金！" }
         ]
       },
       {
         text: "你開著公司老舊公務車外出會客，不料在郊區路上意外撞到了路邊走出來的牛！",
         choices: [
-          { text: "【賠償車損與牛隻】與農夫和解並吸收公務車修車自負額", health: -10, salary: -4000, log: "自掏腰包賠償農夫並支付修車費，修為（薪資）大失血！" },
-          { text: "【私下艱難談判】在烈日下與農夫談判兩小時耗盡精血", health: -15, salary: -2500, log: "雖然殺價成功，但中暑脫水且依然付出了昂貴的和解金！" }
+          { text: "【賠償車損與牛隻】與農夫和解並吸收公務車修車自負額", health: -10, salary: -4000, log: "自掏腰包賠償農夫並支付修車費！" },
+          { text: "【私下艱難談判】在烈日下與農夫談判兩小時耗盡精血", health: -15, salary: -2500, log: "談判耗盡精血，中暑且付出了和解金！" }
         ]
       },
-
-      // 🚨 ================== 突發特別事件：公司大裁員 ================== 🚨
       {
-        text: "🚨 <b>【突發天劫：公司大裁員】</b><br>仙界景氣寒冬降臨！公司宣佈進行『大規模組織優化（裁員）』，HR 與高層手持裁員大禮包在各部門殺紅了眼！",
+        text: "🚨 <b>【突發天劫：公司大裁員】</b><br>仙界景氣寒冬降臨！公司宣佈進行『大規模組織優化（裁員）』！",
         choices: [
-          {
-            text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗",
-            specialOutcome: "laidOffEnding"
-          },
-          {
-            text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓",
-            specialOutcome: "jailGuardOutcome"
-          },
-          {
-            text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」",
-            health: -10,
-            salary: +3000,
-            log: "長官投鼠忌器，深怕系統崩潰被會長責罰，不僅不敢裁你，還被迫加薪安撫你的社畜怨念！"
-          }
+          { text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗", specialOutcome: "laidOffEnding" },
+          { text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓", specialOutcome: "jailGuardOutcome" },
+          { text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」", health: -10, salary: +3000, log: "長官投鼠忌器，被迫加薪安撫你的社畜怨念！" }
         ]
       },
-
-      // 🍃 --- 平淡無奇的日常 ---
       {
         text: "這個月公司平平淡淡，沒有什麼大事發生，你按部就班地上班下班。",
         choices: [
           { text: "【平安是福】默默領薪水，安分守己", health: -2, salary: +500, log: "平凡的一個月過去了，修為微微提升。" },
           { text: "【茶水間摸魚】泡杯咖啡，跟旁邊同事閒聊", health: +5, salary: 0, log: "在茶水間補充了一點靈氣。" }
         ]
-      },
-
-      // 🏰 ================== 7F 頂層仙界高層大陣 (職位鎖定：萬年組長以上) ================== 🏰
-      {
-        text: "7F 貴賓室傳來無上威壓！會長「張詠唱」、董事長「張釋戒」與監察人「鍋臂粉」同時開會，整層樓空氣瞬間凝結！",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【極速彎腰】行 90 度修仙大禮，高喊「各位長官萬福！」", health: -5, salary: +3000, log: "會長張詠唱對你微微點頭，職場修為大幅提升！" },
-          { text: "【奉茶遞水】恭敬遞上特級靈芝茶給監察人「鍋臂粉」", health: +5, salary: +1500, log: "鍋臂粉非常滿意，賞賜了你特別獎金！" }
-        ]
-      },
-      {
-        text: "會長「張詠唱」突然在會議室走出來，要大家當場提出一個能讓公司營收翻倍的「世紀大戰略」。",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【極致畫餅】侃侃而談元宇宙與 AI 的結合計畫", health: -10, salary: +3500, log: "張詠唱聽得十分滿意，誇讚你有高層遠見！" },
-          { text: "【低頭裝忙】狂敲計算機假裝在算數據", health: 0, salary: 0, log: "成功避開會長視線，保住一口真氣。" }
-        ]
-      },
-      {
-        text: "董事長「張釋戒」拿著一本經營哲學，問你對於公司「組織精簡與加班常態化」有何看法。",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【忠心耿耿】「董事長，我願化身基石，公司就是我的家！」", health: -15, salary: +3000, log: "張釋戒大為感動，稱讚你是公司中流砥柱！" },
-          { text: "【官方回答】「一切聽從公司安排與戰略規劃。」", health: 0, salary: +500, log: "不功不過，平穩過關。" }
-        ]
-      },
-      {
-        text: "監察人「鍋臂粉」手持算盤突襲查帳，質疑你們部門這個月的文具報支費用超標了！",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【仔細核對】拿出完整的單據逐筆說明成本合理性", health: -10, salary: +1000, log: "鍋臂粉核對無誤，勉為其難批准報支。" },
-          { text: "【自掏腰包】「夫人息怒，超出的部分我自己補上！」", health: +5, salary: -500, log: "鍋臂粉滿意地點頭，稱讚你懂得為公司著想。" }
-        ]
-      },
-      {
-        text: "總經理「像蚊帳」突然下達最高等級防務指令，要求全公司徹查項目進度，且嚴禁向外透露半個字！",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【連夜整理】將所有進度包裝成「仙界機密專案 PPT」", health: -15, salary: +4000, log: "像蚊帳總經理深感滿意，決定重用你！" },
-          { text: "【保持沉默】嚴守口風，絕不多嘴", health: 0, salary: 0, log: "安全過關，沒有捲入核心風暴。" }
-        ]
-      },
-      {
-        text: "執行董事「煦速正」看似和藹地走過來，問你：「最近各部門的工作節奏，你覺得有需要調整的地方嗎？」",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【適度建言】提出了幾點優化跨部門溝通的實用建議", health: -5, salary: +2500, log: "煦速正點頭讚許，認為你具備管理思維。" },
-          { text: "【官方客套】「目前各部門配合都很順暢，長官帶領得很好！」", health: 0, salary: +1000, log: "煦速正笑了笑，沒再多說。" }
-        ]
-      },
-
-      // 🛒 ================== 7F 通路部 (職位鎖定：萬年組長以上) ================== 🛒
-      {
-        text: "通路部「蒼元經理」、「蓮降副理」與「濕小姐」發動鋪貨大陣，要求本週內攻下所有大型通路市場！",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【狂發 Email】連夜聯繫所有經銷門市搶架位", health: -15, salary: +3500, log: "蒼元經理大讚你具備通路突破能力！" },
-          { text: "【巡店摸魚】假裝出差考察門市，實則去喝下午茶", health: +15, salary: 0, log: "身心靈獲得極大療癒，健康度回升！" }
-        ]
-      },
-      {
-        text: "通路部「蒼元經理」丟下一份競品報告，要你立刻分析對方為什麼能佔據最好的陳列位置。",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【深入剖析】連夜做出一份競品通路策略分析圖表", health: -10, salary: +2500, log: "蒼元經理非常欣賞你的專業分析。" },
-          { text: "【簡要回報】回報是對方給了更高的上架費", health: 0, salary: 0, log: "經理嘆了口氣，沒再繼續追問。" }
-        ]
-      },
-      {
-        text: "通路部「蓮降副理」突然出現在你身後，拍拍你的肩膀問：「這個月通路給我們的業績預估，達標了嗎？」",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【美化數據】拿出包含了預估潛在訂單的精美圖表", health: -10, salary: +3000, log: "蓮降副理滿意地點頭，賞賜了你保健食品。" },
-          { text: "【誠實回報】「還差一點，正在全力追趕中！」", health: -10, salary: +1000, log: "副理叮嚀你要加緊腳步。" }
-        ]
-      },
-      {
-        text: "通路部「濕小姐」展現強大的溝通協調能力，幫忙處理掉了一大堆通路經銷商的抱怨電話。",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【送上甜點】買了一份下午茶表達感謝", health: +5, salary: -300, log: "濕小姐欣然接受，跨部門關係大躍進！" },
-          { text: "【接手追蹤】接下剩餘的行政後續追蹤工作", health: -10, salary: +1500, log: "順利協助通路部完成後續作業。" }
-        ]
-      },
-
-      // 🌐 ================== 7F 海外事業部 (職位鎖定：萬年組長以上) ================== 🌐
-      {
-        text: "海外事業部「張嫁瓷」手持跨國外貿急件，需要立刻找人幫忙處理海外客戶的緊急報單！",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【英打神功】狂飆全英文 Email 與外商溝通細節", health: -10, salary: +3000, log: "張嫁瓷誇獎你具備國際事業部的即戰力！" },
-          { text: "【Google 翻譯】用翻譯軟體快速過一遍送出", health: +5, salary: -500, log: "海外客戶雖然看懂了，但語氣有點生硬。" }
-        ]
-      },
-      {
-        text: "張嫁瓷問你，有沒有興趣協助海外事業部籌備下個月的跨國線上展會？",
-        minRealmIndex: 2,
-        choices: [
-          { text: "【全力支援】熬夜幫忙準備跨國簡報與產品資料", health: -15, salary: +4000, log: "展會大成功！你獲得了海外事業部的特別津貼。" },
-          { text: "【婉言謝絕】表示目前手邊的本土專案已滿載", health: +5, salary: 0, log: "張嫁瓷表示理解，尋找其他人支援。" }
-        ]
-      },
-
-      // 🥤 ================== 離職同仁特別事件 (無職位限制) ================== 🥤
-      {
-        text: "離職同仁「猴董」突然提著一整箱手搖飲料前來探班，身上散發著成功脫離苦海的光芒！",
-        choices: [
-          { text: "【大口喝下】接過全糖珍奶大口吸食", health: +15, salary: 0, log: "吸入高糖靈藥，身心獲得極大療癒，健康度回復！" },
-          { text: "【請教經驗】連忙詢問外面的市場待遇與跳槽環境", health: +5, salary: +1000, log: "猴董分享了業界情報，你的身價與眼界大幅提升！" }
-        ]
-      },
-      {
-        text: "猴董悄悄把你拉到走廊角落，問你最近工作順不順利，有沒有考慮看新的機會。",
-        choices: [
-          { text: "【請教履歷】請猴董幫忙看自己的履歷怎麼包裝", health: +10, salary: +2000, log: "得到了高人指點，你的市場競爭力大大提升！" },
-          { text: "【敘舊敘舊】單純聊聊近況，感謝他的關心", health: +5, salary: 0, log: "收穫了一段真摯的職場友誼。" }
-        ]
-      },
-
-      // 👁️ ================== 6F 幕僚檢督人 (無職位限制) ================== 👁️
-      {
-        text: "幕僚檢督人「塵協理」開啟天劫法眼巡視各部門，眼神所到之處皆為焦土！",
-        choices: [
-          { text: "【端正坐姿】敲擊鍵盤發出陣陣修仙陣響", health: -5, salary: +1000, log: "塵協理點了點頭，認為你頗具社畜慧根。" },
-          { text: "【切換視窗】瞬間壓低螢幕切換成 Excel 試算表", health: +5, salary: 0, log: "成功避開法眼，保住一口真氣。" }
-        ]
-      },
-      {
-        text: "塵協理空降會議室，要求抽查所有人的週報與進度追蹤表，氣氛極度凝重！",
-        choices: [
-          { text: "【精美包裝】將日常例行公事包裝成「核心戰略項目」", health: -10, salary: +2500, log: "塵協理大為讚賞，稱你是公司的棟樑！" },
-          { text: "【誠實交卷】列出本週實際完成的日常工作", health: +5, salary: -500, log: "協理提醒你要再多增加一點主動性。" }
-        ]
-      },
-
-      // 🎨 ================== 6F 行銷企劃 & 美編 (無職位限制) ================== 🎨
-      {
-        text: "行銷企劃「榴主任」與「黃尾」聯手發起爆款提案大會，要求 10 分鐘內產出 100 個活動概念！",
-        choices: [
-          { text: "【ChatGPT 附體】召喚 AI 工具極速生成提案", health: 0, salary: +2000, log: "榴主任與黃尾大為震撼，讚賞你的效率！" },
-          { text: "【腦力激盪】強行燃燒腦細胞拼命想點子", health: -15, salary: +1500, log: "提案順利過關，但你的腦細胞大量損耗。" }
-        ]
-      },
-      {
-        text: "榴主任拿著一份剛出來的活動數據，邀你一起討論下一階段的行銷策略。",
-        choices: [
-          { text: "【主動請纓】提出了一套全新的社群操作方案", health: -10, salary: +3000, log: "榴主任非常欣賞你的衝勁，給予績效獎勵！" },
-          { text: "【配合執行】表示會全力協助目前的既定方針", health: 0, salary: +1000, log: "穩紮穩打完成任務。" }
-        ]
-      },
-      {
-        text: "黃尾跑來找你，說榴主任想要一個「既要有質感、又要搶眼、還要帶有文青感」的設計風格。",
-        choices: [
-          { text: "【提供參考圖】找了幾張質感極佳範本協助釐清需求", health: -5, salary: +1500, log: "成功幫團隊節省了大把溝通時間！" },
-          { text: "【交給美編】「這種專業問題，還是讓美編開示吧！」", health: 0, salary: 0, log: "成功甩鍋，沒讓自己捲入需求漩渦。" }
-        ]
-      },
-      {
-        text: "美編「瘀華」與「捲爺」面容枯槁，丟出一份名為《V99_最終版_真的最後改.psd》的圖檔。",
-        choices: [
-          { text: "【送上咖啡】祭出續命飲料安撫兩位美編", health: +5, salary: -500, log: "瘀華與捲爺大受感動，幫你的圖稿優先排版！" },
-          { text: "【提出微調】「這裡能不能再放大一點點？」", health: -20, salary: 0, log: "捲爺發怒觸發美編怨念，你的健康度大幅下降！" }
-        ]
-      },
-      {
-        text: "美編「瘀華」拿著兩張微小的配色方案問你：「你覺得 A 版的藍色比較好，還是 B 版的藍色比較好？」",
-        choices: [
-          { text: "【認真分析】從視覺心理學的角度仔細剖析差異", health: -5, salary: +1500, log: "瘀華大為震撼，把你視為知音！" },
-          { text: "【盲選一個】「我覺得 A 版看起來非常順眼！」", health: 0, salary: 0, log: "平安過關，沒有引發美編天劫。" }
-        ]
-      },
-      {
-        text: "美編「捲爺」發動「精修圖稿大術」，把原本混亂的活動主視覺整修得閃閃發亮！",
-        choices: [
-          { text: "【極致讚美】狂發誇誇貼圖「捲爺太強啦！」", health: +5, salary: +500, log: "捲爺心情大好，順便幫你把附圖也修了。" },
-          { text: "【請吃雞排】買了份雞排感謝捲爺的神救援", health: +5, salary: -500, log: "捲爺吃得非常開心，團隊氣氛融洽。" }
-        ]
-      },
-
-      // 📦 ================== 6F 採購 (無職位限制) ================== 📦
-      {
-        text: "採購經理「症經理」與「林小姐」展現強大砍價功力，要你找一家便宜 50% 的供應商！",
-        choices: [
-          { text: "【極限談判】對供應商展開多輪道德綁架與議價", health: -10, salary: +3000, log: "成功將成本砍下，症經理大加讚賞！" },
-          { text: "【坦白說明】「這個預算在市場上真的買不到品質好的...」", health: 0, salary: -1000, log: "採購部門暫時凍結了你的申請單。" }
-        ]
-      },
-      {
-        text: "採購經理「症經理」拿著合約書，找你確認這個月的資材採購項目與報價。",
-        choices: [
-          { text: "【逐條核對】細心檢查每一筆規格與條款", health: -10, salary: +2000, log: "抓出了一處價格漏洞，症經理誇獎你非常細心！" },
-          { text: "【快速簽署】確認大方向沒問題後直接蓋章", health: 0, salary: +500, log: "流程迅速推進。" }
-        ]
-      },
-      {
-        text: "採購「林小姐」發動超級砍價神功，硬生生幫你們部門省下了一大筆預算費用！",
-        choices: [
-          { text: "【熱烈鼓掌】「林小姐真不愧是公司的省錢專家！」", health: +5, salary: +1000, log: "林小姐滿意地點頭，允諾以後優先幫你處理單據。" },
-          { text: "【請喝飲料】倒了一杯好茶遞給林小姐", health: +5, salary: 0, log: "建立起良好的跨部門合作關係。" }
-        ]
-      },
-
-      // 🌸 ================== 6F 人資部 (無職位限制) ================== 🌸
-      {
-        text: "人資四多花「琳達、珈稜、熟君、莉鏡」佈下考績天劫陣，對你進行年度心靈審問。",
-        choices: [
-          { text: "【極致畫餅】講述自己對公司未來 5 年的職涯規劃", health: -5, salary: +4000, log: "四仙姑深受感動，評定你為優秀弟子！" },
-          { text: "【實話實說】「我只是來努力工作領薪水買飯吃的。」", health: +10, salary: -1500, log: "四仙姑搖了搖頭，記錄下你的主動性需提升。" }
-        ]
-      },
-      {
-        text: "人資四多花「琳達、珈稜、熟君、莉鏡」正在籌備員工聚餐，問你有沒有推薦的餐廳。",
-        choices: [
-          { text: "【熱情推薦】推薦了一家高 CP 值的在地美食", health: -5, salary: +1500, log: "採納了你的建議，同事們吃得非常滿意！" },
-          { text: "【隨大流】「只要是大家喜歡吃的我都 OK！」", health: 0, salary: 0, log: "安全牌，沒有犯錯。" }
-        ]
-      },
-      {
-        text: "人資「丞董」悄悄走過來，掏出一本《履歷優化心法》，問你想不想了解外面的市場行情。",
-        choices: [
-          { text: "【虛心請教】向丞董請教職場技能包裝技巧", health: +10, salary: +2000, log: "領悟了履歷精修術，個人市場身價提升！" },
-          { text: "【祝賀飛昇】祝福丞董未來跳槽發展順利", health: +5, salary: 0, log: "丞董請你喝了一杯手搖飲。" }
-        ]
-      },
-      {
-        text: "人資「噸鳴」發動神龍見首不見尾大術，在 10 分鐘內迅速穿梭辦公室蓋章與處理公文！",
-        choices: [
-          { text: "【精準攔截】在他出沒的黃金 5 分鐘內搶先蓋章", health: -5, salary: +1500, log: "成功蓋到章！公文流程順利推進！" },
-          { text: "【錯過時機】等你想找人時，噸鳴早已出外辦事", health: 0, salary: 0, log: "只能把文件放在桌上等待明天。" }
-        ]
-      },
-
-      // 🎓 ================== 6F 教育中心 (無職位限制) ================== 🎓
-      {
-        text: "教育中心「小輓、星蚊、龜董、柯董」發起全員職場培訓大會【心靈成長工作坊】！",
-        choices: [
-          { text: "【閉目冥想】表面點頭，實則坐在後排閉目養神", health: +15, salary: 0, log: "獲得了極佳的補眠機會，健康度大幅提升！" },
-          { text: "【積極發言】舉手回答龜董與柯董的現場提問", health: -10, salary: +2500, log: "獲得龜董與柯董讚許，獎勵職場修為！" }
-        ]
-      },
-      {
-        text: "教育中心「小輓」與「星蚊」突襲檢查，問你能不能隨口說出公司的 3 大核心企業精神。",
-        choices: [
-          { text: "【流利背誦】「團隊、創新、追求卓越！」", health: -5, salary: +1500, log: "小輓與星蚊滿意地遞給你一顆喉糖表示獎勵。" },
-          { text: "【裝傻笑笑】「在我的心中，但一時說不出口...」", health: 0, salary: -500, log: "被提醒要多複習內部宣導文件。" }
-        ]
-      },
-      {
-        text: "教育中心「龜董」與「柯董」拿著新印好的訓練手冊，問你對於未來的課程規劃有什麼建議。",
-        choices: [
-          { text: "【提出實務需求】希望能多開一點自動化工具與 AI 應用課", health: -5, salary: +2000, log: "龜董與柯董讚賞你的學習熱情！" },
-          { text: "【表示滿意】「目前的課程安排已經非常完善！」", health: 0, salary: +500, log: "長官們滿意地點點頭。" }
-        ]
-      },
-
-      // 💻 ================== 6F 資訊中心 (無職位限制) ================== 💻
-      {
-        text: "你的電腦突然藍白畫面死機！緊急聯繫資訊中心「煌經理」，結果獲得【已讀亂回】貼圖連發！",
-        choices: [
-          { text: "【尋求天團救援】轉向聯繫廖董、周先生、許先生、謝先生救援", health: +5, salary: +1000, log: "資訊天團發動重開機大術，系統瞬間恢復！" },
-          { text: "【試圖解讀貼圖】努力跟煌經理用貼圖對話溝通問題", health: -15, salary: 0, log: "陷入深深的自我懷疑與溝通迷宮。" }
-        ]
-      },
-      {
-        text: "資訊中心「煌經理」在群組裡發了一串深奧的系統維護公告，並附上了幾個謎之貼圖。",
-        choices: [
-          { text: "【回覆按讚】默默按了一個「讚」表達收到", health: 0, salary: +500, log: "平安無事，維持禮貌。" },
-          { text: "【認真提問】私訊詢問這次維護是否會影響資料備份", health: -5, salary: +1000, log: "煌經理回傳了一個讚的貼圖，代表一切正常。" }
-        ]
-      },
-      {
-        text: "資訊天團（廖董、周先生、許先生、謝先生）發動【全公司網路大升級】，網路暫停 1 小時！",
-        choices: [
-          { text: "【光明正大摸魚】趁機伸展筋骨、去倒水放空", health: +15, salary: 0, log: "沒有網路的世界太美好了，健康度大幅回復！" },
-          { text: "【開手機熱點】繼續拼命整理離線文件與文稿", health: -15, salary: +2000, log: "展現了極高敬業度，獲得長官注意。" }
-        ]
-      },
-
-      // 👵 --- 年齡限定事件 ---
-      {
-        text: "你今年 75 歲了，後輩好奇地問你為什麼還不辦理退休，你指了指身後長官畫的大餅...",
-        minAge: 75,
-        choices: [
-          { text: "【老當益壯】大喊「我還能再加班 10 年！」", health: -10, salary: +3000, log: "全公司都被你這股堅韌不拔的社畜精神震懾！" },
-          { text: "【拄拐摸魚】靠著老資歷在辦公室安詳打瞌睡", health: +20, salary: 0, log: "無人敢打擾你，健康度得到極大滋補！" }
-        ]
       }
     ];
 
-    // 4. 荒謬死法庫
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
       "被長官畫的「未來公司上市分紅」大餅當場噎死。",
       "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
-      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。",
-      "在 99 歲高齡時被煌經理的【已讀亂回】貼圖氣到心肌梗塞。",
-      "幫美編改第 100 版 PSD 圖檔時，精血耗盡身亡。",
-      "在 7F 開會時被會長與總經理的強大氣場當場壓爆。",
-      "在通路部考察時不幸被經銷商的客訴電話淹沒身亡。"
+      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
     ];
 
-    // 🎶 本地 Repo 音樂路徑設定
-    const bgmTracks = [
-      "bgm1.mp3",
-      "bgm2.mp3",
-      "bgm3.mp3"
-    ];
-
+    const bgmTracks = ["bgm1.mp3", "bgm2.mp3", "bgm3.mp3"];
     let currentTrackIndex = 0;
     let isPlayingBGM = false;
     let isUiHidden = false;
 
-    // 🎧 初始化音樂監聽：自動播放下一首＋無限循環
     function initAudio() {
       const bgm = document.getElementById("bgm");
-      
       bgm.addEventListener("ended", () => {
         currentTrackIndex = (currentTrackIndex + 1) % bgmTracks.length;
         playTrack(currentTrackIndex);
@@ -767,7 +515,6 @@
     function playTrack(index) {
       currentTrackIndex = index;
       const bgm = document.getElementById("bgm");
-      
       bgm.pause();
       bgm.src = bgmTracks[index];
       bgm.load();
@@ -778,22 +525,12 @@
         else btn.classList.remove('active');
       });
 
-      if (isPlayingBGM) {
-        bgm.play().catch(e => console.log("Play interrupted:", e));
-      }
+      if (isPlayingBGM) bgm.play().catch(e => console.log(e));
     }
 
     function toggleBgmMenu() {
-      const menu = document.getElementById("bgm-menu");
-      menu.classList.toggle("show");
+      document.getElementById("bgm-menu").classList.toggle("show");
     }
-
-    window.addEventListener('click', (e) => {
-      const container = document.querySelector('.bgm-dropdown-container');
-      if (container && !container.contains(e.target)) {
-        document.getElementById("bgm-menu")?.classList.remove("show");
-      }
-    });
 
     function toggleBGM() {
       const bgm = document.getElementById("bgm");
@@ -805,8 +542,6 @@
           toggleBtn.innerText = "⏸️ 關閉音樂";
           bgmMainBtn.innerText = "🔊 ";
           isPlayingBGM = true;
-        }).catch(e => {
-          console.warn("Autoplay Error:", e);
         });
       } else {
         bgm.pause();
@@ -816,39 +551,24 @@
       }
     }
 
-    function selectTrack(index, btnElement) {
+    function selectTrack(index) {
       playTrack(index);
       if (!isPlayingBGM) toggleBGM();
     }
 
     function toggleUI() {
       const mainUi = document.getElementById("main-ui");
-      const uiBtn = document.getElementById("ui-btn");
-
-      if (!isUiHidden) {
-        mainUi.classList.add("ui-hidden");
-        uiBtn.innerText = "👁️ ";
-        isUiHidden = true;
-      } else {
-        mainUi.classList.remove("ui-hidden");
-        uiBtn.innerText = "👁️ ";
-        isUiHidden = false;
-      }
+      isUiHidden = !isUiHidden;
+      if (isUiHidden) mainUi.classList.add("ui-hidden");
+      else mainUi.classList.remove("ui-hidden");
     }
 
-    // 🌧️⚡ 下雨 + 閃電動畫引擎
     function initWeatherEffect() {
       const canvas = document.getElementById('weather-canvas');
       const ctx = canvas.getContext('2d');
       const lightning = document.getElementById('lightning');
-
       let width = canvas.width = window.innerWidth;
       let height = canvas.height = window.innerHeight;
-
-      window.addEventListener('resize', () => {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-      });
 
       const rainDrops = [];
       for (let i = 0; i < 150; i++) {
@@ -856,8 +576,7 @@
           x: Math.random() * width,
           y: Math.random() * height,
           length: Math.random() * 20 + 10,
-          speed: Math.random() * 10 + 15,
-          opacity: Math.random() * 0.4 + 0.2
+          speed: Math.random() * 10 + 15
         });
       }
 
@@ -874,7 +593,6 @@
 
           drop.y += drop.speed;
           drop.x -= 1;
-
           if (drop.y > height) {
             drop.y = -drop.length;
             drop.x = Math.random() * width;
@@ -884,22 +602,16 @@
         if (Math.random() < 0.015) {
           lightning.style.opacity = '1';
           setTimeout(() => { lightning.style.opacity = '0'; }, 60);
-          setTimeout(() => { 
-            if (Math.random() < 0.5) {
-              lightning.style.opacity = '0.8';
-              setTimeout(() => { lightning.style.opacity = '0'; }, 40);
-            }
-          }, 100);
         }
 
         requestAnimationFrame(render);
       }
-
       render();
     }
 
-    // 🎮 遊戲核心邏輯
     function updateUI() {
+      const originNames = { rich: "富家子弟 🏰", normal: "平民百姓 🏠", beggar: "街頭乞丐 🪨" };
+      document.getElementById("origin-name").innerText = originNames[state.origin];
       document.getElementById("realm").innerText = realms[state.realmIndex].name;
       document.getElementById("salary").innerText = state.salary.toLocaleString();
       document.getElementById("age").innerText = state.age;
@@ -922,16 +634,10 @@
         return;
       }
 
-      // 幹到 100 歲大圓滿退休
       if (state.age >= 100) {
-        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 終極職場大圓滿（百歲真仙飛昇）</b><br>你成功幹到了 100 歲！公司頒發「萬年老社畜尊者」金牌，你功德圓滿飛昇仙界！`;
+        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 終極職場大圓滿（百歲真仙飛昇）</b><br>你成功幹到了 100 歲！功德圓滿飛昇仙界！`;
         document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
         return;
-      }
-
-      // 65 歲時自動觸發「回聘續命陣」
-      if (state.age === 65 && state.months % 12 === 0) {
-        addLog("⚠️ 滿 65 歲！長官對你施展【強行回聘續命陣】，退而不休繼續幹！");
       }
 
       const currentRealm = realms[state.realmIndex];
@@ -947,20 +653,11 @@
       if (state.months % 12 === 0) state.age++;
 
       let randomEvent;
-
-      // 🎲 只有在一輩子還沒觸發過時，才進行 0.1% (0.001) 的極稀有判定
       if (!state.hasMetRichLady && Math.random() < 0.001) {
         state.hasMetRichLady = true;
         randomEvent = rareRichLadyEvent;
       } else {
-        // 🎯 依據玩家當前年齡、職位鎖定機制過濾可用事件
-        const availableEvents = events.filter(e => {
-          if (e.minAge && state.age < e.minAge) return false;
-          if (e.minRealmIndex && state.realmIndex < e.minRealmIndex) return false;
-          return true;
-        });
-
-        randomEvent = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+        randomEvent = events[Math.floor(Math.random() * events.length)];
       }
       
       document.getElementById("event-text").innerHTML = randomEvent.text;
@@ -975,36 +672,45 @@
         btn.onclick = () => {
           document.getElementById("sfx-spin").play().catch(e => {});
 
-          // 🌹 觸發富婆包養隱藏結局
           if (choice.specialOutcome === "richLadyEnding") {
             state.isDead = true;
-            document.getElementById("event-text").innerHTML = `<b style="color:#eab308;">💖 隱藏結局【紅塵大圓滿】</b><br>你跟著富婆搭乘私人飛機遠走高飛，住進海景豪宅，終生不再需要為了 KPI 燃燒精血。你享盡了人間天倫之樂，成功脫離苦海！`;
+            document.getElementById("event-text").innerHTML = `<b style="color:#eab308;">💖 隱藏結局【紅塵大圓滿】</b><br>你跟著富婆遠走高飛，享盡天倫之樂！`;
             choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
             return;
           }
 
-          // ☠️ 觸發賣屁股裁員失敗結局
           if (choice.specialOutcome === "laidOffEnding") {
             state.isDead = true;
-            document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 結局【慘遭優化】</b><br>你試圖向長官投懷送抱賣屁股，不料被上級嚴重嫌棄，當場發送裁員大禮包！你無奈黯然離場，職場修仙之路就此終結！`;
-            choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎 (重新開始)</button>`;
+            document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 結局【慘遭優化】</b><br>你賣屁股失敗當場被裁員！`;
+            choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎</button>`;
             return;
           }
 
-          // 👮 觸發坐牢出獄當保全（第二人生）
           if (choice.specialOutcome === "jailGuardOutcome") {
             state.age += 10;
-            state.health = 100; // 獄中鍛鍊，健康補滿
-            addLog("⛓️ 你與長官大打出手被關了 10 年！出獄後長官賞識你一身武藝，聘請你回來當【保全尊者】，開啟職場第二人生！");
+            state.health = 100;
+            addLog("⛓️ 你坐牢 10 年後出獄當【保全尊者】，開啟職場第二人生！");
             updateUI();
-            if (!state.isDead && state.salary < realms[state.realmIndex].nextSalary) {
-              nextTurn();
-            }
+            if (!state.isDead) nextTurn();
             return;
           }
 
-          state.health += choice.health || 0;
-          state.salary += choice.salary || 0;
+          // ⚖️ 出身影響核心邏輯演算：
+          let healthChange = choice.health || 0;
+          let salaryChange = choice.salary || 0;
+
+          // 富家子弟：扣血減少 20%
+          if (state.origin === "rich" && healthChange < 0) {
+            healthChange = Math.round(healthChange * 0.8);
+          }
+
+          // 街頭乞丐：扣血額外增加 20%
+          if (state.origin === "beggar" && healthChange < 0) {
+            healthChange = Math.round(healthChange * 1.2);
+          }
+
+          state.health += healthChange;
+          state.salary += salaryChange;
           if (state.health > 100) state.health = 100;
           if (choice.log) addLog(choice.log);
           
@@ -1019,7 +725,7 @@
 
     function triggerTribulation() {
       const nextRealm = realms[state.realmIndex + 1];
-      document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>你的修為已達標！長官準備評估你是否能升任為 <b>${nextRealm.name}</b>！`;
+      document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>評估升任為 <b>${nextRealm.name}</b>！`;
       
       const choicesContainer = document.getElementById("choices");
       choicesContainer.innerHTML = "";
@@ -1038,7 +744,7 @@
           nextTurn();
         } else {
           state.health -= 30;
-          addLog(`❌ 渡劫失敗！被長官評定「態度不佳」，健康度下降！`);
+          addLog(`❌ 渡劫失敗！健康度下降！`);
           updateUI();
           if (state.health > 0) nextTurn();
         }
@@ -1047,17 +753,14 @@
     }
 
     function resetGame() {
-      state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false, hasMetRichLady: false };
+      state = { origin: "normal", realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false, hasMetRichLady: false };
+      document.getElementById("origin-modal").style.display = "flex";
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
-      updateUI();
-      nextTurn();
     }
 
     window.onload = () => {
       initAudio();
       initWeatherEffect();
-      updateUI();
-      nextTurn();
     };
   </script>
 </body>
