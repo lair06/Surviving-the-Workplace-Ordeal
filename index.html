@@ -273,7 +273,6 @@
       line-height: 1.5;
     }
 
-    /* 🎭 出身選擇彈窗 */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -320,7 +319,6 @@
 </head>
 <body>
 
-  <!-- 🎭 出身選擇彈窗 -->
   <div id="origin-modal" class="modal-overlay">
     <div class="modal-card">
       <h2 style="color: #38bdf8; margin-bottom: 10px;">⚡ 選擇你的職場出身 ⚡</h2>
@@ -399,7 +397,7 @@
     ];
 
     let state = {
-      origin: "normal", // "rich", "normal", "beggar"
+      origin: "normal",
       realmIndex: 0,
       salary: 28000,
       age: 22,
@@ -415,12 +413,12 @@
 
       if (type === "rich") {
         state.salary = 48000;
-        state.realmIndex = 1; // 直升扣血社畜
+        state.realmIndex = 1;
         state.health = 100;
         addLog("🏰 【富家子弟】開局！帶著家族資源空降公司，初始修為大幅提升！");
       } else if (type === "beggar") {
         state.salary = 22000;
-        state.health = 70; // 初始健康打折
+        state.health = 70;
         addLog("🪨 【街頭乞丐】開局！體力透支且身無分文，職場路途極度艱辛！");
       } else {
         addLog("🏠 【平民百姓】開局！踏實努力，步步為營。");
@@ -430,67 +428,169 @@
       nextTurn();
     }
 
-    const rareRichLadyEvent = {
-      text: "💎 <b>【極稀有隱藏事件：紅塵仙緣】</b><br>一位身價千億的神秘富婆遞給你一張黑卡與豪宅鑰匙，深情地對你說：「別再職場修仙了，跟我走，我包養你一生一世！」",
-      choices: [
-        { 
-          text: "【雙宿雙飛】接過黑卡，化作一對鴛鴦遠走高飛，享盡天倫之樂！", 
-          specialOutcome: "richLadyEnding"
+    // 🎯 按類別歸納的所有事件庫（包含 category 標籤）
+    const categorizedEvents = {
+      rare: [
+        {
+          text: "💎 <b>【極稀有隱藏事件：紅塵仙緣】</b><br>一位身價千億的神秘富婆遞給你一張黑卡與豪宅鑰匙，深情地對你說：「別再職場修仙了，跟我走，我包養你一生一世！」",
+          choices: [
+            { text: "【雙宿雙飛】接過黑卡，化作一對鴛鴦遠走高飛，享盡天倫之樂！", specialOutcome: "richLadyEnding" },
+            { text: "【一心求道】「多謝好意！即便要在職場輪迴千年，我也只為求道！」", health: +30, salary: +5000, log: "你展現了社畜道心震撼富婆，獲得鉅額修為與大補丹！" }
+          ]
         },
-        { 
-          text: "【一心求道】「多謝好意！即便要在職場輪迴千年，我也只為求道！」", 
-          health: +30, 
-          salary: +5000, 
-          log: "你展現了無與倫比的社畜道心，震撼了富婆！她決定投資你的道業，贈與你鉅額修為與大補丹！" 
+        {
+          text: "🚨 <b>【突發天劫：公司大裁員】</b><br>仙界景氣寒冬降臨！公司宣佈進行『大規模組織優化（裁員）』！",
+          choices: [
+            { text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗", specialOutcome: "laidOffEnding" },
+            { text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓", specialOutcome: "jailGuardOutcome" },
+            { text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」", health: -10, salary: +3000, log: "長官投鼠忌器，被迫加薪安撫你的社畜怨念！" }
+          ]
+        }
+      ],
+      debuff: [
+        {
+          text: "同組同仁突然請長假去度假，主管直接把對方留下的龐大專案爛攤子全扔給你接手！",
+          choices: [
+            { text: "【默默熬夜接手】燃燒肝臟連夜加班補救", health: -15, salary: -1000, log: "爛攤子勉強收尾，健康與薪資雙雙下滑！" },
+            { text: "【甩給實習生】分派給實習生處理，結果實習生出包連累你", health: -5, salary: -2000, log: "實習生嚴重出包，你被扣除績效獎金！" }
+          ]
+        },
+        {
+          text: "公司爆發嚴重產品品質危機上新聞！老闆為了保住高層顏面，要你這個基石出面坦傷背鍋！",
+          choices: [
+            { text: "【召開記者會】面帶微笑向全體大眾鞠躬道歉坦傷", health: -25, salary: -3000, log: "替公司擋下了輿論子彈，但你被記大過扣薪！" },
+            { text: "【發聲明稿澄清】熬夜寫公關稿，被網友與老闆雙重暴擊", health: -15, salary: -1500, log: "公關稿被網友罵翻，老闆怪你辦事不力！" }
+          ]
+        },
+        {
+          text: "全公司唯一的廁所突然管線爆裂大維修！整天無法順暢排解生理壓力，大家怨氣沖天！",
+          choices: [
+            { text: "【硬吞強忍】憋尿憋便一整天，內力嚴重失調", health: -20, salary: -500, log: "忍到差點走火入魔！器官嚴重受損！" },
+            { text: "【跑去對面超商】為了上廁所頻繁離座，被迫消費買咖啡", health: -10, salary: -1000, log: "被主管質疑離座，扣除當月出勤獎金！" }
+          ]
+        },
+        {
+          text: "你開著公司老舊公務車外出會客，不料在郊區路上意外撞到了路邊走出來的牛！",
+          choices: [
+            { text: "【賠償車損與牛隻】與農夫和解並吸收公務車修車自負額", health: -10, salary: -4000, log: "自掏腰包賠償農夫並支付修車費！" },
+            { text: "【私下艱難談判】在烈日下與農夫談判兩小時耗盡精血", health: -15, salary: -2500, log: "談判耗盡精血，中暑且付出了和解金！" }
+          ]
+        }
+      ],
+      high7F: [
+        {
+          text: "7F 貴賓室傳來無上威壓！會長「張詠唱」、董事長「張釋戒」與監察人「鍋臂粉」同時開會！",
+          choices: [
+            { text: "【極速彎腰】行 90 度修仙大禮，高喊「各位長官萬福！」", health: -5, salary: +3000, log: "張詠唱對你點頭，修為大幅提升！" },
+            { text: "【奉茶遞水】恭敬遞上特級靈芝茶給監察人「鍋臂粉」", health: +5, salary: +1500, log: "鍋臂粉非常滿意，賞賜特別獎金！" }
+          ]
+        },
+        {
+          text: "會長「張詠唱」突然在會議室走出來，要大家當場提出一個能讓公司營收翻倍的「世紀大戰略」。",
+          choices: [
+            { text: "【極致畫餅】侃侃而談元宇宙與 AI 的結合計畫", health: -10, salary: +3500, log: "張詠唱誇讚你有高層遠見！" },
+            { text: "【低頭裝忙】狂敲計算機假裝在算數據", health: 0, salary: 0, log: "成功避開會長視線，保住一口真氣。" }
+          ]
+        }
+      ],
+      channel7F: [
+        {
+          text: "通路部「蒼元經理」、「蓮降副理」與「濕小姐」發動鋪貨大陣，要求本週內攻下所有通路！",
+          choices: [
+            { text: "【狂發 Email】連夜聯繫所有經銷門市搶架位", health: -15, salary: +3500, log: "蒼元經理大讚你具備通路突破能力！" },
+            { text: "【巡店摸魚】假裝出差考察門市，實則去喝下午茶", health: +15, salary: 0, log: "身心靈獲得極大療癒，健康度回升！" }
+          ]
+        }
+      ],
+      overseas7F: [
+        {
+          text: "海外事業部「張嫁瓷」手持跨國外貿急件，需要立刻找人幫忙處理海外客戶的緊急報單！",
+          choices: [
+            { text: "【英打神功】狂飆全英文 Email 與外商溝通細節", health: -10, salary: +3000, log: "張嫁瓷誇獎你具備國際事業部即戰力！" },
+            { text: "【Google 翻譯】用翻譯軟體快速過一遍送出", health: +5, salary: -500, log: "海外客戶雖然看懂了，但語氣有點生硬。" }
+          ]
+        }
+      ],
+      exStaff: [
+        {
+          text: "離職同仁「猴董」突然提著一整箱手搖飲料前來探班，身上散發著成功脫離苦海的光芒！",
+          choices: [
+            { text: "【大口喝下】接過全糖珍奶大口吸食", health: +15, salary: 0, log: "吸入高糖靈藥，身心獲得極大療癒！" },
+            { text: "【請教經驗】連忙詢問外面的市場待遇與跳槽環境", health: +5, salary: +1000, log: "猴董分享了業界情報，身價大幅提升！" }
+          ]
+        }
+      ],
+      supervisor6F: [
+        {
+          text: "幕僚檢督人「塵協理」開啟天劫法眼巡視各部門，眼神所到之處皆為焦土！",
+          choices: [
+            { text: "【端正坐姿】敲擊鍵盤發出陣陣修仙陣響", health: -5, salary: +1000, log: "塵協理點頭，認為你頗具社畜慧根。" },
+            { text: "【切換視窗】瞬間壓低螢幕切換成 Excel 試算表", health: +5, salary: 0, log: "成功避開法眼，保住一口真氣。" }
+          ]
+        }
+      ],
+      marketing6F: [
+        {
+          text: "行銷企劃「榴主任」與「黃尾」聯手發起提案大會，要求 10 分鐘內產出 100 個活動概念！",
+          choices: [
+            { text: "【ChatGPT 附體】召喚 AI 工具極速生成提案", health: 0, salary: +2000, log: "榴主任與黃尾大為震撼，讚賞你的效率！" },
+            { text: "【腦力激盪】強行燃燒腦細胞拼命想點子", health: -15, salary: +1500, log: "提案順利過關，但腦細胞大量損耗。" }
+          ]
+        },
+        {
+          text: "美編「瘀華」與「捲爺」面容枯槁，丟出一份名為《V99_最終版_真的最後改.psd》的圖檔。",
+          choices: [
+            { text: "【送上咖啡】祭出續命飲料安撫兩位美編", health: +5, salary: -500, log: "瘀華與捲爺大受感動，幫你的圖稿優先排版！" },
+            { text: "【提出微調】「這裡能不能再放大一點點？」", health: -20, salary: 0, log: "捲爺發怒觸發美編怨念，健康度大幅下降！" }
+          ]
+        }
+      ],
+      purchasing6F: [
+        {
+          text: "採購經理「症經理」與「林小姐」展現強大砍價功力，要你找一家便宜 50% 的供應商！",
+          choices: [
+            { text: "【極限談判】對供應商展開多輪道德綁架與議價", health: -10, salary: +3000, log: "成功將成本砍下，症經理大加讚賞！" },
+            { text: "【坦白說明】「這個預算在市場上真的買不到品質好的...」", health: 0, salary: -1000, log: "採購部門暫時凍結了你的申請單。" }
+          ]
+        }
+      ],
+      hr6F: [
+        {
+          text: "人資四多花「琳達、珈稜、熟君、莉鏡」佈下考績天劫陣，對你進行年度心靈審問。",
+          choices: [
+            { text: "【極致畫餅】講述自己對公司未來 5 年的職涯規劃", health: -5, salary: +4000, log: "四仙姑深受感動，評定你為優秀弟子！" },
+            { text: "【實話實說】「我只是來努力工作領薪水買飯吃的。」", health: +10, salary: -1500, log: "四仙姑搖頭，記錄下你的主動性需提升。" }
+          ]
+        }
+      ],
+      edu6F: [
+        {
+          text: "教育中心「小輓、星蚊、龜董、柯董」發起全員職場培訓大會【心靈成長工作坊】！",
+          choices: [
+            { text: "【閉目冥想】表面點頭，實則坐在後排閉目養神", health: +15, salary: 0, log: "獲得極佳補眠機會，健康度大幅提升！" },
+            { text: "【積極發言】舉手回答龜董與柯董的現場提問", health: -10, salary: +2500, log: "獲得龜董與柯董讚許，獎勵職場修為！" }
+          ]
+        }
+      ],
+      it6F: [
+        {
+          text: "你的電腦突然藍白畫面死機！緊急聯繫資訊中心「煌經理」，結果獲得【已讀亂回】貼圖連發！",
+          choices: [
+            { text: "【尋求天團救援】轉向聯繫廖董、周先生、許先生、謝先生救援", health: +5, salary: +1000, log: "資訊天團發動重開機大術，系統恢復！" },
+            { text: "【試圖解讀貼圖】努力跟煌經理用貼圖對話溝通問題", health: -15, salary: 0, log: "陷入深深的自我懷疑與溝通迷宮。" }
+          ]
+        }
+      ],
+      daily: [
+        {
+          text: "這個月公司平平淡淡，沒有什麼大事發生，你按部就班地上班下班。",
+          choices: [
+            { text: "【平安是福】默默領薪水，安分守己", health: -2, salary: +500, log: "平凡的一個月過去了，修為微微提升。" },
+            { text: "【茶水間摸魚】泡杯咖啡，跟旁邊同事閒聊", health: +5, salary: 0, log: "在茶水間補充了一點靈氣。" }
+          ]
         }
       ]
     };
-
-    const events = [
-      {
-        text: "同組同仁突然請長假去度假，主管直接把對方留下的龐大專案爛攤子全扔給你接手！",
-        choices: [
-          { text: "【默默熬夜接手】燃燒肝臟連夜加班補救", health: -15, salary: -1000, log: "爛攤子勉強收尾，健康與薪資雙雙下滑！" },
-          { text: "【甩給實習生】分派給實習生處理，結果實習生出包連累你", health: -5, salary: -2000, log: "實習生嚴重出包，你被扣除績效獎金！" }
-        ]
-      },
-      {
-        text: "公司爆發嚴重產品品質危機上新聞！老闆為了保住高層顏面，要你這個基石出面坦傷背鍋！",
-        choices: [
-          { text: "【召開記者會】面帶微笑向全體大眾鞠躬道歉坦傷", health: -25, salary: -3000, log: "替公司擋下了輿論子彈，但你被記大過扣薪！" },
-          { text: "【發聲明稿澄清】熬夜寫公關稿，被網友與老闆雙重暴擊", health: -15, salary: -1500, log: "公關稿被網友罵翻，老闆怪你辦事不力！" }
-        ]
-      },
-      {
-        text: "全公司唯一的廁所突然管線爆裂大維修！整天無法順暢排解生理壓力，大家怨氣沖天！",
-        choices: [
-          { text: "【硬吞強忍】憋尿憋便一整天，內力嚴重失調", health: -20, salary: -500, log: "忍到差點走火入魔！器官嚴重受損！" },
-          { text: "【跑去對面超商】為了上廁所頻繁離座，被迫消費買咖啡", health: -10, salary: -1000, log: "被主管質疑離座，扣除當月出勤獎金！" }
-        ]
-      },
-      {
-        text: "你開著公司老舊公務車外出會客，不料在郊區路上意外撞到了路邊走出來的牛！",
-        choices: [
-          { text: "【賠償車損與牛隻】與農夫和解並吸收公務車修車自負額", health: -10, salary: -4000, log: "自掏腰包賠償農夫並支付修車費！" },
-          { text: "【私下艱難談判】在烈日下與農夫談判兩小時耗盡精血", health: -15, salary: -2500, log: "談判耗盡精血，中暑且付出了和解金！" }
-        ]
-      },
-      {
-        text: "🚨 <b>【突發天劫：公司大裁員】</b><br>仙界景氣寒冬降臨！公司宣佈進行『大規模組織優化（裁員）』！",
-        choices: [
-          { text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗", specialOutcome: "laidOffEnding" },
-          { text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓", specialOutcome: "jailGuardOutcome" },
-          { text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」", health: -10, salary: +3000, log: "長官投鼠忌器，被迫加薪安撫你的社畜怨念！" }
-        ]
-      },
-      {
-        text: "這個月公司平平淡淡，沒有什麼大事發生，你按部就班地上班下班。",
-        choices: [
-          { text: "【平安是福】默默領薪水，安分守己", health: -2, salary: +500, log: "平凡的一個月過去了，修為微微提升。" },
-          { text: "【茶水間摸魚】泡杯咖啡，跟旁邊同事閒聊", health: +5, salary: 0, log: "在茶水間補充了一點靈氣。" }
-        ]
-      }
-    ];
 
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
@@ -646,20 +746,67 @@
       }
     }
 
+    // 🎲 核心類別權重概率抽樣演算法
+    function getRandomEventByWeight() {
+      const isPromoted = state.realmIndex >= 2; // 是否到達「萬年組長」
+
+      let weights;
+      if (isPromoted) {
+        // 🌟 晉升後機率分配 (總和 100%)
+        weights = [
+          { category: 'rare', weight: 1 },
+          { category: 'debuff', weight: 5 },
+          { category: 'high7F', weight: 5 },
+          { category: 'channel7F', weight: 10 },
+          { category: 'overseas7F', weight: 10 },
+          { category: 'exStaff', weight: 5 },
+          { category: 'supervisor6F', weight: 10 },
+          { category: 'marketing6F', weight: 10 },
+          { category: 'purchasing6F', weight: 10 },
+          { category: 'hr6F', weight: 10 },
+          { category: 'edu6F', weight: 10 },
+          { category: 'it6F', weight: 10 },
+          { category: 'daily', weight: 4 }
+        ];
+      } else {
+        // 🏠 未晉升前機率分配 (7F 30% 均分給 6F 的 6 個類別，各 +5%，總和 100%)
+        weights = [
+          { category: 'rare', weight: 1 },
+          { category: 'debuff', weight: 5 },
+          { category: 'exStaff', weight: 5 },
+          { category: 'supervisor6F', weight: 15 },
+          { category: 'marketing6F', weight: 15 },
+          { category: 'purchasing6F', weight: 15 },
+          { category: 'hr6F', weight: 15 },
+          { category: 'edu6F', weight: 15 },
+          { category: 'it6F', weight: 15 },
+          { category: 'daily', weight: 4 }
+        ];
+      }
+
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      let selectedCategory = 'daily';
+
+      for (const item of weights) {
+        cumulative += item.weight;
+        if (rand < cumulative) {
+          selectedCategory = item.category;
+          break;
+        }
+      }
+
+      const pool = categorizedEvents[selectedCategory];
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
     function nextTurn() {
       if (state.isDead) return;
 
       state.months++;
       if (state.months % 12 === 0) state.age++;
 
-      let randomEvent;
-      if (!state.hasMetRichLady && Math.random() < 0.001) {
-        state.hasMetRichLady = true;
-        randomEvent = rareRichLadyEvent;
-      } else {
-        randomEvent = events[Math.floor(Math.random() * events.length)];
-      }
-      
+      const randomEvent = getRandomEventByWeight();
       document.getElementById("event-text").innerHTML = randomEvent.text;
 
       const choicesContainer = document.getElementById("choices");
@@ -695,16 +842,13 @@
             return;
           }
 
-          // ⚖️ 出身影響核心邏輯演算：
           let healthChange = choice.health || 0;
           let salaryChange = choice.salary || 0;
 
-          // 富家子弟：扣血減少 20%
           if (state.origin === "rich" && healthChange < 0) {
             healthChange = Math.round(healthChange * 0.8);
           }
 
-          // 街頭乞丐：扣血額外增加 20%
           if (state.origin === "beggar" && healthChange < 0) {
             healthChange = Math.round(healthChange * 1.2);
           }
