@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>六人成虎 ‧ 職場修仙傳 ⚡</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 15px;
+    }
+    .game-card {
+      background: rgba(30, 41, 59, 0.9);
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+    }
+    h1 { font-size: 1.5rem; text-align: center; color: #38bdf8; margin-bottom: 5px; }
+    .subtitle { font-size: 0.85rem; text-align: center; color: #94a3b8; margin-bottom: 15px; }
+    
+    /* 數值面板 */
+    .stats-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+    .stat-item span { color: #38bdf8; font-weight: bold; }
+
+    /* 事件區域 */
+    .event-box {
+      background: rgba(15, 23, 42, 0.6);
+      border-left: 4px solid #38bdf8;
+      padding: 12px;
+      min-height: 80px;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* 選擇題按鈕 */
+    .choices-container { display: flex; flex-direction: column; gap: 10px; }
+    .choice-btn {
+      background: #1e293b;
+      border: 1px solid #38bdf8;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-align: left;
+      transition: all 0.2s ease;
+    }
+    .choice-btn:hover { background: #38bdf8; color: #0f172a; font-weight: bold; }
+    
+    /* 日誌 */
+    .log-box {
+      margin-top: 15px;
+      background: #020617;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-card">
+  <h1>六人成虎 ‧ 職場修仙傳 ⚡</h1>
+  <div class="subtitle">渡劫升官，抑或是過勞化身怨靈？</div>
+
+  <!-- 面板 -->
+  <div class="stats-panel">
+    <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
+    <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
+    <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲</div>
+    <div class="stat-item">健康度：<span id="health">100</span>%</div>
+  </div>
+
+  <!-- 事件描述 -->
+  <div id="event-text" class="event-box">載入中...</div>
+
+  <!-- 選項 -->
+  <div id="choices" class="choices-container"></div>
+
+  <!-- 日誌 -->
+  <div id="game-log" class="log-box">修仙履歷展開...<br></div>
+</div>
+
+<script>
+  // 1. 境界（公司職位）
+  const realms = [
+    { name: "試用實習生", minSalary: 28000, nextSalary: 35000 },
+    { name: "扣血社畜", minSalary: 35000, nextSalary: 48000 },
+    { name: "萬年組長", minSalary: 48000, nextSalary: 65000 },
+    { name: "甩鍋經理", minSalary: 65000, nextSalary: 90000 },
+    { name: "畫餅總監", minSalary: 90000, nextSalary: 150000 },
+    { name: "董事長 (飛昇)", minSalary: 150000, nextSalary: Infinity }
+  ];
+
+  // 2. 玩家初始資料
+  let state = {
+    realmIndex: 0,
+    salary: 28000,
+    age: 22,
+    months: 0,
+    health: 100,
+    isDead: false
+  };
+
+  // 3. 隨機事件庫
+  const events = [
+    {
+      text: "龜董突然在週五下班前 5 分鐘傳訊：「這個小改動很簡單，下週一開會要看。」",
+      choices: [
+        { text: "【硬幹渡劫】連夜加班做完", health: -15, salary: +2000, log: "你消耗了大量壽元，換來了龜董的一句「收到」。" },
+        { text: "【隱身心法】假裝沒看到訊息，週一再說", health: +5, salary: -500, log: "你順利保住壽元，但週一被評為「缺乏修仙主動性」。" },
+        { text: "【吸氣大法】吸收隔壁同仁的加班廢氣幫忙做", health: 0, salary: +1000, log: "隔壁同仁臉色發青，但你的進度順利完成！" }
+      ]
+    },
+    {
+      text: "丞董在茶水間偷偷塞給你一本《離職心法殘卷》，問你要不要一起跳槽。",
+      choices: [
+        { text: "【參悟心法】默默研讀，提升市場身價", health: 0, salary: +3000, log: "你對仙界履歷有了新的領悟，薪資潛力提升！" },
+        { text: "【告密長官】向長官檢舉丞董有反骨", health: -10, salary: +5000, log: "長官給了你獎金，但你在同門中的名聲毀於一旦。" }
+      ]
+    },
+    {
+      text: "6F 洗手間傳來陣陣靈氣（或怨氣），似乎有同門師兄在裡面偷懶爆發。",
+      choices: [
+        { text: "【深入渡劫】進去一起躲著滑手機 1 小時", health: +10, salary: 0, log: "身心靈獲得極大療癒，健康度提升。" },
+        { text: "【舉報霸位】回座位繼續寫 Code", health: -5, salary: +1000, log: "你內心充滿罪惡感，但工作進度推進了。" }
+      ]
+    }
+  ];
+
+  // 4. 荒謬死法庫
+  const absurdDeaths = [
+    "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
+    "被龜董畫的「未來公司上市分紅」大餅當場噎死。",
+    "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
+    "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
+  ];
+
+  function updateUI() {
+    document.getElementById("realm").innerText = realms[state.realmIndex].name;
+    document.getElementById("salary").innerText = state.salary.toLocaleString();
+    document.getElementById("age").innerText = state.age;
+    document.getElementById("health").innerText = state.health;
+
+    checkStatus();
+  }
+
+  function addLog(text) {
+    const logBox = document.getElementById("game-log");
+    logBox.innerHTML = `> ${text}<br>` + logBox.innerHTML;
+  }
+
+  function checkStatus() {
+    if (state.health <= 0) {
+      state.isDead = true;
+      const deathReason = absurdDeaths[Math.floor(Math.random() * absurdDeaths.length)];
+      document.getElementById("event-text").innerHTML = `<b style="color:#ef4444;">☠️ 渡劫失敗（身亡）</b><br>${deathReason}`;
+      document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 重新投胎 (重新開始)</button>`;
+      return;
+    }
+
+    if (state.age >= 65) {
+      document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 渡劫大圓滿（安全退休）</b><br>你順利活到 65 歲，帶著足夠的退休金離開職場修仙界！`;
+      document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再體驗一次職場修仙</button>`;
+      return;
+    }
+
+    // 檢查是否達到「升官渡劫」標準
+    const currentRealm = realms[state.realmIndex];
+    if (state.salary >= currentRealm.nextSalary && state.realmIndex < realms.length - 1) {
+      triggerTribulation();
+    }
+  }
+
+  function nextTurn() {
+    if (state.isDead) return;
+
+    state.months++;
+    if (state.months % 12 === 0) state.age++;
+
+    // 隨機選事件
+    const randomEvent = events[Math.floor(Math.random() * events.length)];
+    document.getElementById("event-text").innerText = randomEvent.text;
+
+    const choicesContainer = document.getElementById("choices");
+    choicesContainer.innerHTML = "";
+
+    randomEvent.choices.forEach(choice => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.innerText = choice.text;
+      btn.onclick = () => {
+        state.health += choice.health;
+        state.salary += choice.salary;
+        if (state.health > 100) state.health = 100;
+        addLog(choice.log);
+        updateUI();
+        if (!state.isDead && state.salary < realms[state.realmIndex].nextSalary) {
+          nextTurn();
+        }
+      };
+      choicesContainer.appendChild(btn);
+    });
+  }
+
+  // 升官渡劫關卡
+  function triggerTribulation() {
+    const nextRealm = realms[state.realmIndex + 1];
+    document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>你的修為 (薪資) 已達標！長官準備評估你是否能升任為 <b>${nextRealm.name}</b>！`;
+    
+    const choicesContainer = document.getElementById("choices");
+    choicesContainer.innerHTML = "";
+
+    const passBtn = document.createElement("button");
+    passBtn.className = "choice-btn";
+    passBtn.innerText = "⚡ 接受考績天劫審查";
+    passBtn.onclick = () => {
+      // 渡劫成功率取決於健康度
+      const successRate = state.health / 100;
+      if (Math.random() < successRate) {
+        state.realmIndex++;
+        addLog(`✨ 渡劫成功！升任為【${nextRealm.name}】！`);
+        updateUI();
+        nextTurn();
+      } else {
+        state.health -= 30;
+        addLog(`❌ 渡劫失敗！被長官評定「態度不佳」，健康度大幅下降！`);
+        updateUI();
+        if (state.health > 0) nextTurn();
+      }
+    };
+    choicesContainer.appendChild(passBtn);
+  }
+
+  function resetGame() {
+    state = { realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false };
+    document.getElementById("game-log").innerHTML = "重新投胎...<br>";
+    updateUI();
+    nextTurn();
+  }
+
+  // 初始化
+  updateUI();
+  nextTurn();
+</script>
+</body>
+</html>
