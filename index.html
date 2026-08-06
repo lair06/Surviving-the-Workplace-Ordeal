@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> 職場修仙傳 ⚡</title>
+  <title>六人成虎 ‧ 職場修仙傳 ⚡</title>
   <style>
     * {
       box-sizing: border-box;
@@ -309,7 +309,7 @@
     </div>
   </div>
 
-  <!-- 🎵 音訊效果 (去掉 loop 以便自動播放下一首) -->
+  <!-- 🎵 音訊效果 -->
   <audio id="bgm" src="bgm1.mp3"></audio>
   <audio id="sfx-spin" src="https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3"></audio>
   <audio id="sfx-stop" src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3"></audio>
@@ -319,14 +319,14 @@
     <div class="game-card">
       <div class="header-banner">
         <h1>六人成虎 ‧ 職場修仙傳 ⚡</h1>
-        <div class="subtitle">— 渡劫升官，抑或是過勞化身怨靈？ —</div>
+        <div class="subtitle">— 幹到 100 歲飛昇，抑或是過勞化身怨靈？ —</div>
       </div>
 
       <!-- 📊 屬性面板 -->
       <div class="stats-panel">
         <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
         <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
-        <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲</div>
+        <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲 / 100</div>
         <div class="stat-item">健康度：<span id="health">100</span>%</div>
       </div>
 
@@ -349,7 +349,8 @@
       { name: "萬年組長", minSalary: 48000, nextSalary: 65000 },
       { name: "甩鍋經理", minSalary: 65000, nextSalary: 90000 },
       { name: "畫餅總監", minSalary: 90000, nextSalary: 150000 },
-      { name: "董事長 (飛昇)", minSalary: 150000, nextSalary: Infinity }
+      { name: "資深顧問 (回聘)", minSalary: 150000, nextSalary: 250000 },
+      { name: "萬年老顧問 (幹到死)", minSalary: 250000, nextSalary: Infinity }
     ];
 
     // 2. 玩家初始狀態
@@ -362,14 +363,21 @@
       isDead: false
     };
 
-    // 3. 爆笑沙雕隨機事件庫 (整合公司全體神仙人物)
+    // 3. 爆笑沙雕超大事件庫
     const events = [
-      // --- 幕僚檢督 ---
+      // --- 幕僚檢督人 ---
       {
         text: "幕僚檢督人「塵協理」開啟天劫法眼巡視各部門，眼神所到之處皆為焦土！",
         choices: [
           { text: "【端正坐姿】敲擊鍵盤發出陣陣修仙陣響", health: -5, salary: +1000, log: "塵協理點了點頭，認為你頗具社畜慧根。" },
           { text: "【隱身遁形】瞬間壓低螢幕視窗切換成 Excel", health: +5, salary: 0, log: "你成功避開法眼，保住一口真氣。" }
+        ]
+      },
+      {
+        text: "塵協理突然空降會議室，要求抽查所有人的「修仙週報與 KPI 陣法圖」。",
+        choices: [
+          { text: "【極限吹噓】將打雜工作包裝成「仙界戰略佈局」", health: -10, salary: +2500, log: "塵協理大為讚賞，稱你是公司的社畜棟樑！" },
+          { text: "【誠實交卷】誠實列出這週只完成了 2 件小事", health: +5, salary: -1000, log: "塵協理冷笑一聲，將你列入重點關照名單。" }
         ]
       },
 
@@ -388,6 +396,13 @@
           { text: "【提出微調】「這裡能不能再放大一點加個光暈？」", health: -20, salary: 0, log: "捲爺發怒觸發「美編怨念天劫」，你的健康度大幅下降！" }
         ]
       },
+      {
+        text: "黃尾突然跑來對你說：「榴主任說這個主視覺要『五彩斑斕的黑』，美編瘀華已經快成魔了，怎麼辦？」",
+        choices: [
+          { text: "【和稀泥話術】「我們把黑色調亮 10% 試試！」", health: -5, salary: +1000, log: "成功糊弄過去，美編與主任暫時達成和平協定。" },
+          { text: "【火上澆油】「我覺得字體要換成新細明體加粗！」", health: -25, salary: 0, log: "美編瘀華與捲爺起兵造反，你被殃及池魚慘扣健康度！" }
+        ]
+      },
 
       // --- 採購 ---
       {
@@ -395,6 +410,13 @@
         choices: [
           { text: "【施展話術】對供應商展開修仙式道德綁架", health: -10, salary: +3000, log: "成功的將價格砍下，症經理與林小姐大加讚賞！" },
           { text: "【攤手擺爛】「這個價格真的買不到啊！」", health: 0, salary: -1000, log: "採購部門對你施加「資材凍結術」。" }
+        ]
+      },
+      {
+        text: "林小姐拿著採購單找到你：「症經理說這筆預算少了一個零，叫你想辦法生出來。」",
+        choices: [
+          { text: "【掏空私房錢】先墊付靈石再慢慢報帳", health: -15, salary: +2000, log: "墊錢事小，但報帳流程拖了半年…" },
+          { text: "【尋求靈石淘寶】找劣質替代品濫竽充數", health: -5, salary: +500, log: "勉強過關，但物品用了一一次就壞了。" }
         ]
       },
 
@@ -414,7 +436,7 @@
         ]
       },
       {
-        text: "人資「噸鳴」發動「神龍見首不見尾」大術：早上 8 點進公司、9 點出門，下午 4 點回來、5 點下班，總結：極度忙碌！",
+        text: "人資「噸鸣」發動「神龍見首不見尾」大術：早上 8 點進公司、9 點出門，下午 4 點回來、5 點下班，總結：極度忙碌！",
         choices: [
           { text: "【堵人蓋章】在其出沒的黃金 10 分鐘內發動攔截", health: -5, salary: +1500, log: "成功攔截噸鳴蓋到章！公文順利推進！" },
           { text: "【錯過時機】等你想找人時，噸鳴早已遁地離去", health: 0, salary: 0, log: "你只能對著空的辦公桌發呆。" }
@@ -426,7 +448,14 @@
         text: "教育中心「小輓、星蚊、龜董、柯董」發起全員精神洗腦大會【職場心靈渡劫課】！",
         choices: [
           { text: "【閉目冥想】表面點頭，實則坐在後排閉目養神", health: +15, salary: 0, log: "獲得極佳的睡眠，健康度大幅提升！" },
-          { text: "【積極互動】舉手回答龜董與柯董的靈魂發問", health: -10, salary: +2500, log: "獲得龜董讚許，獎勵修為提升！" }
+          { text: "【積極互動】舉手回答龜董與柯董的靈魂發問", health: -10, salary: +2500, log: "獲得龜董與柯董讚許，獎勵修為提升！" }
+        ]
+      },
+      {
+        text: "小輓與星蚊突襲檢查：「請在 3 分鐘內說出公司的核心修仙價值觀！」",
+        choices: [
+          { text: "【背誦心法】「加班、奉獻、共創雙贏！」", health: -5, salary: +1000, log: "小輓與星蚊滿意地遞給你一顆仙丹（喉糖）。" },
+          { text: "【裝傻充愣】「蛤？公司不是只賣便當嗎？」", health: 0, salary: -500, log: "被罰重新上 2 小時修仙心靈課程。" }
         ]
       },
 
@@ -438,13 +467,20 @@
           { text: "【繼續跟煌經理對話】試圖解讀已讀亂回背後的玄機", health: -15, salary: 0, log: "你走火入魔，陷入深深的自我懷疑。" }
         ]
       },
-
-      // --- 經典職場事件 ---
       {
-        text: "6F 洗手間傳來陣陣靈氣（或怨氣），似乎有同門師兄在裡面偷懶爆發。",
+        text: "廖董、周先生、許先生、謝先生組成「IT 四天王陣」，宣佈要進行全公司網路大斷網升級！",
         choices: [
-          { text: "【深入渡劫】進去一起躲著滑手機 1 小時", health: +10, salary: 0, log: "身心靈獲得極大療癒，健康度提升。" },
-          { text: "【舉報霸位】回座位繼續寫 Code", health: -5, salary: +1000, log: "你內心充滿罪惡感，但工作進度推進了。" }
+          { text: "【理智摸魚】趁機光正大地放空滑手機", health: +15, salary: 0, log: "沒有網路的世界太美好了，健康度大幅回復！" },
+          { text: "【開手機熱點】繼續拼命敲 Code 加班", health: -15, salary: +2000, log: "你得到了「極度敬業」稱號，但腰椎快斷了。" }
+        ]
+      },
+
+      // --- 老年爆笑幹到死事件 (65 歲以上限定感受) ---
+      {
+        text: "你今年 75 歲了，後輩問你為什麼還不退休，你指了指身後長官畫的大餅...",
+        choices: [
+          { text: "【老當益壯】大喊「我還能加班！」並吃下一顆老天祿", health: -10, salary: +3000, log: "全公司都被你這股幹到死的社畜精神震懾！" },
+          { text: "【拄拐摸魚】靠著老資歷在辦公室安詳打瞌睡", health: +20, salary: 0, log: "無人敢叫醒你，健康度得到養生補給！" }
         ]
       }
     ];
@@ -452,9 +488,11 @@
     // 4. 荒謬死法庫
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
-      "被龜董畫的「未來公司上市分紅」大餅當場噎死。",
+      "被龜董與柯董畫的「未來公司上市分紅」大餅當場噎死。",
       "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
-      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
+      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。",
+      "在 99 歲高齡時被煌經理的【已讀亂回】貼圖氣到心肌梗塞。",
+      "幫美編捲爺與瘀華改第 100 版 PSD 圖檔時，精血耗盡身亡。"
     ];
 
     // 🎶 本地 Repo 音樂路徑設定
@@ -472,9 +510,8 @@
     function initAudio() {
       const bgm = document.getElementById("bgm");
       
-      // 當目前曲目播放完畢，自動切換至下一首
       bgm.addEventListener("ended", () => {
-        currentTrackIndex = (currentTrackIndex + 1) % bgmTracks.length; // 自動循環回到第 1 首
+        currentTrackIndex = (currentTrackIndex + 1) % bgmTracks.length;
         playTrack(currentTrackIndex);
       });
     }
@@ -487,7 +524,6 @@
       bgm.src = bgmTracks[index];
       bgm.load();
 
-      // 更新選單標示
       const trackBtns = document.querySelectorAll('.bgm-track-btn');
       trackBtns.forEach((btn, i) => {
         if (i === index) btn.classList.add('active');
@@ -638,10 +674,16 @@
         return;
       }
 
-      if (state.age >= 65) {
-        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 渡劫大圓滿（安全退休）</b><br>你順利活到 65 歲，帶著足夠的退休金離開職場修仙界！`;
-        document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再體驗一次職場修仙</button>`;
+      // 幹到 100 歲大圓滿退休
+      if (state.age >= 100) {
+        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 終極職場大圓滿（百歲真仙飛昇）</b><br>你成功幹到了 100 歲！公司頒發「萬年老社畜尊者」金牌，你帶著億萬退休金功德圓滿飛昇仙界！`;
+        document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
         return;
+      }
+
+      // 65 歲時自動觸發「回聘續命陣」
+      if (state.age === 65 && state.months % 12 === 0) {
+        addLog("⚠️ 滿 65 歲！長官對你施展【強行回聘續命陣】，你被迫退而不休繼續幹！");
       }
 
       const currentRealm = realms[state.realmIndex];
@@ -717,7 +759,7 @@
     }
 
     window.onload = () => {
-      initAudio(); // 初始化音樂自動播放下一首與循環
+      initAudio();
       initWeatherEffect();
       updateUI();
       nextTurn();
