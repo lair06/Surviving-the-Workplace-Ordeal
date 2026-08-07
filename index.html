@@ -316,7 +316,6 @@
       background: rgba(56, 189, 248, 0.15);
     }
 
-    /* 🏷️ 右下角版本標示 */
     .version-tag {
       position: fixed;
       bottom: 12px;
@@ -334,8 +333,7 @@
 </head>
 <body>
 
-  <!-- 🏷️ 右下角版本號標示 -->
-  <div class="version-tag">v1.01</div>
+  <div class="version-tag">v1.02</div>
 
   <div id="origin-modal" class="modal-overlay">
     <div class="modal-card">
@@ -419,12 +417,14 @@
       realmIndex: 0,
       salary: 28000,
       age: 22,
-      maxAge: 65,            // 👈 1.01 新增：動態年齡上限 (初始 65，續命後 100)
+      maxAge: 65,
       months: 0,
       health: 100,
       isDead: false,
       hasMetRichLady: false,
-      isRehired: false       // 👈 1.01 新增：是否已觸發強行回聘
+      isRehired: false,
+      hasTriggered5YearChengDong: false,   // 👈 1.02 新增：5年丞董保底觸發標記
+      hasTriggeredGroupLeaderChengDong: false // 👈 1.02 新增：晉升組長丞董保底觸發標記
     };
 
     function selectOrigin(type) {
@@ -448,7 +448,7 @@
       nextTurn();
     }
 
-    // 🚀 完整事件分類資料庫（包含新人物 櫃台女神全員）
+    // 🚀 全量事件分類資料庫
     const categorizedEvents = {
       rare: [
         {
@@ -498,7 +498,38 @@
         }
       ],
 
-      // 👧 1.01 新增：櫃台女神專屬與共同事件結界
+      // 👨‍💼 1.02 新增：丞董專屬獨立類別 (5% 機率，包含所有丞董事件與談心心法)
+      chengDong: [
+        {
+          text: "人資「丞董」悄悄走過來，掏出一本《履歷優化心法》，問你想不想了解外面的市場行情。",
+          choices: [
+            { text: "【虛心請教】向丞董請教職場技能包裝技巧", health: +10, salary: +2000, log: "領悟了履歷精修術，個人市場身價提升！" },
+            { text: "【祝賀飛昇】祝福丞董未來跳槽發展順利", health: +5, salary: 0, log: "丞董請你喝了一杯手搖飲。" }
+          ]
+        },
+        {
+          text: "人資「丞董」私下傳了一份「外部競業薪資水平報告」給你，眼神意義深遠。",
+          choices: [
+            { text: "【暗示能力】暗示長官「自己其實在市場上也蠻有競爭力的」", health: -5, salary: +3000, log: "丞董聽懂了你的意思，幫你爭取到了調薪機會！" },
+            { text: "【感謝情報】禮貌感謝丞董提供的寶貴資訊", health: 0, salary: +500, log: "收穫寶貴情報。" }
+          ]
+        },
+        {
+          text: "人資「丞董」在茶水間分享他最近悟出的「職場退路學與跳槽心法」。",
+          choices: [
+            { text: "【專心聽講】認真聽講並汲取精華經驗", health: +10, salary: +1000, log: "受益匪淺，個人身價提升！" },
+            { text: "【禮貌離開】禮貌打招呼後藉故離開", health: 0, salary: 0, log: "回到座位繼續工作。" }
+          ]
+        },
+        {
+          text: "人資「丞董」拿著你的考核紀錄問你：「『丞』受得了目前的修仙壓力嗎？要不要考慮多留一條後路？」",
+          choices: [
+            { text: "【請教退路】向丞董請教職場防身與跳槽戰術", health: +15, salary: +2000, log: "獲得丞董親傳離職殘卷，身心大補且身價暴漲！" },
+            { text: "【表示堅定】「多謝丞董關心，我還能繼續加班！」", health: -5, salary: +1000, log: "丞董讚許你的堅韌，給予績效認可。" }
+          ]
+        }
+      ],
+
       reception: [
         {
           text: "1F 櫃台「Banna 小姐」幫你攔截了 10 件急件外送與包裹，微笑著幫你代收簽名！",
@@ -511,7 +542,7 @@
           text: "5F 櫃台「冬艷」施展訪客結界，將前來亂鬧的無良廠商完美阻擋在門禁系統之外！",
           choices: [
             { text: "【大讚門禁神功】「冬艷姊這道門禁結界真是固若金湯！」", health: +5, salary: +1000, log: "冬艷滿意地點頭，賞賜了你一顆進口巧克力！" },
-          { text: "【主動幫忙登記】協助登錄訪客資料減輕負擔", health: -5, salary: +1500, log: "展現了極佳的跨樓層互助精神！" }
+            { text: "【主動幫忙登記】協助登錄訪客資料減輕負擔", health: -5, salary: +1500, log: "展現了極佳的跨樓層互助精神！" }
           ]
         },
         {
@@ -840,13 +871,6 @@
           ]
         },
         {
-          text: "人資「丞董」悄悄走過來，掏出一本《履歷優化心法》，問你想不想了解外面的市場行情。",
-          choices: [
-            { text: "【虛心請教】向丞董請教職場技能包裝技巧", health: +10, salary: +2000, log: "領悟了履歷精修術，個人市場身價提升！" },
-            { text: "【祝賀飛昇】祝福丞董未來跳槽發展順利", health: +5, salary: 0, log: "丞董請你喝了一杯手搖飲。" }
-          ]
-        },
-        {
           text: "人資「噸鳴」發動神龍見首不見尾大術，在 10 分鐘內迅速穿梭辦公室蓋章與處理公文！",
           choices: [
             { text: "【精準攔截】在他出沒的黃金 5 分鐘內搶先蓋章", health: -5, salary: +1500, log: "成功蓋到章！公文流程順利推進！" },
@@ -907,20 +931,6 @@
           choices: [
             { text: "【秒填送回】快速勾選完畢立刻交回", health: 0, salary: +500, log: "莉鏡讚賞你的辦事效率！" },
             { text: "【稍後處理】表示手邊工作忙完再寫", health: 0, salary: 0, log: "平穩過關。" }
-          ]
-        },
-        {
-          text: "人資「丞董」私下傳了一份「外部競業薪資水平報告」給你，眼神意義深遠。",
-          choices: [
-            { text: "【暗示能力】暗示長官「自己其實在市場上也蠻有競爭力的」", health: -5, salary: +3000, log: "丞董聽懂了你的意思，幫你爭取到了調薪機會！" },
-            { text: "【感謝情報】禮貌感謝丞董提供的寶貴資訊", health: 0, salary: +500, log: "收穫寶貴情報。" }
-          ]
-        },
-        {
-          text: "人資「丞董」在茶水間分享他最近悟出的「職場退路學與跳槽心法」。",
-          choices: [
-            { text: "【專心聽講】認真聽講並汲取精華經驗", health: +10, salary: +1000, log: "受益匪淺，個人身價提升！" },
-            { text: "【禮貌離開】禮貌打招呼後藉故離開", health: 0, salary: 0, log: "回到座位繼續工作。" }
           ]
         },
         {
@@ -999,7 +1009,7 @@
           text: "教育中心「龜董」在會議上慢條斯理地講述公司三十年前的創業艱辛故事。",
           choices: [
             { text: "【認真筆記】認真聽講並做筆記展現尊重", health: -5, salary: +1500, log: "龜董非常欣慰，覺得你是可塑之才！" },
-            { text: "【眼神發呆】眼神發呆進入冥想放空狀態", health: +10, salary: 0, log: "腦袋得到了充份休息。" }
+          { text: "【眼神發呆】眼神發呆進入冥想放空狀態", health: +10, salary: 0, log: "腦袋得到了充份休息。" }
           ]
         },
         {
@@ -1082,7 +1092,7 @@
           ]
         },
         {
-          text: "資訊天團「許先生」連夜撰寫自動化腳本，幫全公司省去大量人工輸入單據的時間！",
+          text: "資訊天团「許先生」連夜撰寫自動化腳本，幫全公司省去大量人工輸入單據的時間！",
           choices: [
             { text: "【送上點心】送上高級點心盒感謝許先生的神救援", health: +5, salary: -500, log: "許先生非常開心，跨部門合作融洽！" },
             { text: "【請教自動化】請教許先生如何幫自己寫摸魚自動化腳本", health: -5, salary: +2000, log: "學會了自動化技能，效率大提升！" }
@@ -1121,12 +1131,30 @@
       ]
     };
 
-    // 🍵 1.01 新增：每 3 年必觸發的摸魚事件（不限年齡）
+    // 🍵 每 3 年必觸發的摸魚事件
     const periodicSlackingEvent = {
       text: "☕ <b>【定期心法：職場摸魚術】</b><br>你修煉職場心法滿 3 年，領悟了摸魚精髓！你決定在辦公室安詳打瞌睡，適度釋放累積的社畜壓力。",
       choices: [
         { text: "【養生摸魚】靠著資歷在座位上養神放空", health: +20, salary: 0, log: "參悟了摸魚大道，健康度得到極大滋補！" },
         { text: "【帶薪打盹】去茶水間跟同事交流摸魚心得", health: +15, salary: +1000, log: "摸魚不忘吸收職場情報，身心與修為同時提升！" }
+      ]
+    };
+
+    // 👨‍💼 1.02 新增：滿 5 年保底丞董談心事件
+    const chengDong5YearGuaranteeEvent = {
+      text: "👨‍💼 <b>【職場 5 年里程碑：丞董談心】</b><br>你在公司修煉滿 5 年了！人資「丞董」提著兩杯精品咖啡走過來，眼神充滿關懷：「恭喜修煉滿 5 年，來聊聊你這幾年的道心與職涯發展吧！」",
+      choices: [
+        { text: "【請教職涯心法】認真請教未來的晉升與跳槽策略", health: +15, salary: +3000, log: "丞董傳授你《離職心法殘卷》，你的職場修為與身價大幅暴漲！" },
+        { text: "【暢談公司願景】「丞董，我願意繼續為公司燃燒精血！」", health: -5, salary: +4000, log: "丞董深受震撼，為你爭取到了優秀資深員工特別津貼！" }
+      ]
+    };
+
+    // 👨‍💼 1.02 新增：升任萬年組長保底丞董談心事件
+    const chengDongGroupLeaderGuaranteeEvent = {
+      text: "⚡ <b>【高階道心開導：丞董的祝福】</b><br>恭喜你順利渡劫晉升為【萬年組長】！人資「丞董」特別到你座位前致意：「恭喜升官！踏入組長境界後，管理與背鍋壓力非同小可，記得適時給自己留條退路。」",
+      choices: [
+        { text: "【領悟職場退路學】虛心汲取丞董傳授的高階心法", health: +20, salary: +2500, log: "領悟了退路學真諦，管理壓力瞬間釋放，氣息大增！" },
+        { text: "【請教管理之道】請教如何帶領下屬與向上管理", health: -5, salary: +3500, log: "丞董傾囊相授，你的管理修為獲得極大提升！" }
       ]
     };
 
@@ -1273,7 +1301,6 @@
         return;
       }
 
-      // 👵 1.01 雙階段退休與終極飛昇機制
       if (state.age >= state.maxAge) {
         state.isDead = true;
         if (state.maxAge === 65) {
@@ -1291,7 +1318,6 @@
       }
     }
 
-    // 👵 65 歲分歧選擇
     function trigger65RetirementChoice() {
       document.getElementById("event-text").innerHTML = `👵 <b>【職場關鍵分歧：65 歲功成身退】</b><br>你今年滿 65 歲了！長官拿著退休結算單與【強行回聘續命合約】，問你的下一步打算：`;
       const choicesContainer = document.getElementById("choices");
@@ -1321,6 +1347,7 @@
       choicesContainer.appendChild(rehireBtn);
     }
 
+    // 🎲 1.02 微調權重：reception 5%, chengDong 5%, daily 5%
     function getRandomEventByWeight() {
       const isPromoted = state.realmIndex >= 2;
 
@@ -1329,32 +1356,34 @@
         weights = [
           { category: 'rare', weight: 1 },
           { category: 'debuff', weight: 5 },
-          { category: 'reception', weight: 8 }, // 👈 新增櫃台類別
+          { category: 'chengDong', weight: 5 },  // 👈 丞董獨立類別 5%
+          { category: 'reception', weight: 5 },  // 👈 櫃台類別微調為 5%
           { category: 'high7F', weight: 5 },
           { category: 'channel7F', weight: 8 },
           { category: 'overseas7F', weight: 8 },
           { category: 'exStaff', weight: 5 },
-          { category: 'supervisor6F', weight: 10 },
-          { category: 'marketing6F', weight: 10 },
-          { category: 'purchasing6F', weight: 10 },
-          { category: 'hr6F', weight: 10 },
-          { category: 'edu6F', weight: 10 },
-          { category: 'it6F', weight: 10 },
-          { category: 'daily', weight: 0 }
+          { category: 'supervisor6F', weight: 9 },
+          { category: 'marketing6F', weight: 9 },
+          { category: 'purchasing6F', weight: 9 },
+          { category: 'hr6F', weight: 8 },
+          { category: 'edu6F', weight: 9 },
+          { category: 'it6F', weight: 9 },
+          { category: 'daily', weight: 5 }       // 👈 日常類別微調為 5%
         ];
       } else {
         weights = [
           { category: 'rare', weight: 1 },
           { category: 'debuff', weight: 5 },
-          { category: 'reception', weight: 10 }, // 👈 新增櫃台類別
+          { category: 'chengDong', weight: 5 },  // 👈 丞董獨立類別 5%
+          { category: 'reception', weight: 5 },  // 👈 櫃台類別微調為 5%
           { category: 'exStaff', weight: 5 },
-          { category: 'supervisor6F', weight: 13 },
-          { category: 'marketing6F', weight: 13 },
-          { category: 'purchasing6F', weight: 13 },
-          { category: 'hr6F', weight: 13 },
-          { category: 'edu6F', weight: 13 },
-          { category: 'it6F', weight: 14 },
-          { category: 'daily', weight: 0 }
+          { category: 'supervisor6F', weight: 12 },
+          { category: 'marketing6F', weight: 12 },
+          { category: 'purchasing6F', weight: 12 },
+          { category: 'hr6F', weight: 11 },
+          { category: 'edu6F', weight: 12 },
+          { category: 'it6F', weight: 12 },
+          { category: 'daily', weight: 5 }       // 👈 日常類別微調為 5%
         ];
       }
 
@@ -1378,8 +1407,7 @@
       if (state.isDead) return;
 
       state.months++;
-      
-      // 🎁 1.01 新增：年終加薪加速機制（每年年底發放，增加當前年資 1/5 比例的月薪）
+
       if (state.months > 0 && state.months % 12 === 0) {
         state.age++;
         const yearsWorked = Math.floor(state.months / 12);
@@ -1392,10 +1420,21 @@
 
       let randomEvent;
 
-      // 🍵 1.01 新增：每 3 年（36 個月）必定觸發一次摸魚事件
-      if (state.months > 0 && state.months % 36 === 0) {
+      // 👨‍💼 1.02 保底觸發一：滿 5 年保底丞董談心
+      if (state.months === 60 && !state.hasTriggered5YearChengDong) {
+        state.hasTriggered5YearChengDong = true;
+        randomEvent = chengDong5YearGuaranteeEvent;
+      } 
+      // 👨‍💼 1.02 保底觸發二：剛晉升萬年組長保底丞董開導
+      else if (state.realmIndex >= 2 && !state.hasTriggeredGroupLeaderChengDong) {
+        state.hasTriggeredGroupLeaderChengDong = true;
+        randomEvent = chengDongGroupLeaderGuaranteeEvent;
+      }
+      // 🍵 每 3 年（36 個月）必定觸發一次摸魚事件
+      else if (state.months > 0 && state.months % 36 === 0) {
         randomEvent = periodicSlackingEvent;
-      } else {
+      } 
+      else {
         randomEvent = getRandomEventByWeight();
       }
 
@@ -1489,7 +1528,20 @@
     }
 
     function resetGame() {
-      state = { origin: "normal", realmIndex: 0, salary: 28000, age: 22, maxAge: 65, months: 0, health: 100, isDead: false, hasMetRichLady: false, isRehired: false };
+      state = { 
+        origin: "normal", 
+        realmIndex: 0, 
+        salary: 28000, 
+        age: 22, 
+        maxAge: 65, 
+        months: 0, 
+        health: 100, 
+        isDead: false, 
+        hasMetRichLady: false, 
+        isRehired: false,
+        hasTriggered5YearChengDong: false,
+        hasTriggeredGroupLeaderChengDong: false
+      };
       document.getElementById("origin-modal").style.display = "flex";
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
     }
