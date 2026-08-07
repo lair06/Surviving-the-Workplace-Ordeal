@@ -315,9 +315,28 @@
       border-color: #38bdf8;
       background: rgba(56, 189, 248, 0.15);
     }
+
+    /* 🏷️ 右下角版本標示 */
+    .version-badge {
+      position: fixed;
+      bottom: 10px;
+      right: 15px;
+      font-size: 0.75rem;
+      color: #64748b;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 3px 8px;
+      border-radius: 10px;
+      border: 1px solid #334155;
+      z-index: 99;
+      pointer-events: none;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
+
+  <!-- 🏷️ 1.01 版本標示 -->
+  <div class="version-badge">v1.01</div>
 
   <div id="origin-modal" class="modal-overlay">
     <div class="modal-card">
@@ -368,14 +387,14 @@
     <div class="game-card">
       <div class="header-banner">
         <h1>六人成虎 ‧ 職場修仙傳 ⚡</h1>
-        <div class="subtitle">— 幹到 100 歲飛昇，抑或是過勞化身怨靈？ —</div>
+        <div class="subtitle">— 幹到 65 歲（或100歲）飛昇，抑或是過勞化身怨靈？ —</div>
       </div>
 
       <div class="stats-panel">
         <div class="stat-item">出身：<span id="origin-name">未選擇</span></div>
         <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
         <div class="stat-item">修為 (月薪)：<span id="salary">28,000</span></div>
-        <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲 / 100</div>
+        <div class="stat-item">壽元 (年齡)：<span id="age">22</span> 歲 / <span id="max-age">65</span></div>
         <div class="stat-item">健康度：<span id="health">100</span>%</div>
       </div>
 
@@ -401,10 +420,13 @@
       realmIndex: 0,
       salary: 28000,
       age: 22,
+      maxAge: 65,
       months: 0,
+      seniority: 0, // 年資（年）
       health: 100,
       isDead: false,
-      hasMetRichLady: false
+      hasMetRichLady: false,
+      isRehired: false // 是否已選擇強行回聘
     };
 
     function selectOrigin(type) {
@@ -428,7 +450,46 @@
       nextTurn();
     }
 
-    // 🚀 全量 87+ 事件分類資料庫
+    // 🌸 新增：櫃台仙姑群組事件 (1F Banna、6F 筱卿、5F 冬艷、7F 裴星)
+    const receptionEvents = [
+      {
+        text: "經過 1F 門面大廳，櫃台「banna 小姐」微笑著叫住你，親手遞上一封高質感掛號信件與靈茶！",
+        choices: [
+          { text: "【禮貌道謝】接過信件並恭敬道謝", health: +10, salary: +500, log: "1F 櫃台 banna 小姐的甜美微笑撫平了你的社畜心靈，健康度回復！" },
+          { text: "【極速聊兩句】誇獎 1F 門面整理得極具仙氣", health: +5, salary: +1000, log: "banna 小姐非常高興，幫你在快遞處登記了特快優先級！" }
+        ]
+      },
+      {
+        text: "來到 6F 門口，6F 櫃台「筱卿」正在細心整理全公司的外送團購單，桌上滿滿都是續命靈藥（手搖飲料）！",
+        choices: [
+          { text: "【熱情跟團】立刻跟單點一杯全糖波霸鮮奶茶", health: +15, salary: -200, log: "6F 櫃台筱卿幫你拿到了大宗團購折扣，高糖靈藥極度療癒！" },
+          { text: "【協助分分裝】幫忙筱卿把飲料分發給各部門", health: -5, salary: +1500, log: "筱卿誇獎你人超好，人脈廣度與職場好評度提升！" }
+        ]
+      },
+      {
+        text: "經過 5F 門廳，5F 櫃台「冬艷」手持訪客登記陣法，精準攔截了幾位沒有預約且氣勢洶洶的廠商！",
+        choices: [
+          { text: "【大讚專業】狂誇冬艷「不愧是 5F 的最強守門仙姑！」", health: +5, salary: +1000, log: "冬艷微微一笑，順手幫你把一份急件公文蓋章 pass！" },
+          { text: "【主動坦傷】上前幫忙冬艷向廠商說明預約流程", health: -10, salary: +2000, log: "化解了衝突，冬艷對你刮目相看，賞賜了特級點心！" }
+        ]
+      },
+      {
+        text: "登上 7F 頂層，7F 櫃台「裴星」身穿正裝，以無懈可擊的高階儀態阻擋了一批想要硬闖會議室的記者！",
+        minRealmIndex: 2,
+        choices: [
+          { text: "【肅然起敬】行 90 度禮並快速遞上高層備用公文", health: -5, salary: +3000, log: "7F 櫃台裴星對你微微點頭，高層印象分大幅提升！" },
+          { text: "【遞上熱茶】為氣場全開的裴星遞上一杯熱花茶", health: +10, salary: +1000, log: "裴星優雅地接過，稱讚你非常有高層眼力見！" }
+        ]
+      },
+      {
+        text: "✨ <b>【四樓櫃台聯合陣法】</b><br>1F banna 小姐、6F 筱卿、5F 冬艷 與 7F 裴星 四位櫃台仙姑聯手發起『全公司訪客與快遞大淨化』！整座大樓氣場煥然一新！",
+        choices: [
+          { text: "【送上仙姑下午茶】買了四份高檔蛋糕送到各樓層櫃台", health: +20, salary: -1000, log: "四大櫃台仙姑同時為你施加『職場護體光環』，本月所有考績天劫成功率提升！" },
+          { text: "【拍照打卡卡】在公司粉專大讚四大櫃台是公司最強門面", health: +10, salary: +2000, log: "貼文獲高層點讚，四大仙姑聯合為你開通『快速通關傳送門』！" }
+        ]
+      }
+    ];
+
     const categorizedEvents = {
       rare: [
         {
@@ -484,41 +545,6 @@
             { text: "【極速彎腰】行 90 度修仙大禮，高喊「各位長官萬福！」", health: -5, salary: +3000, log: "張詠唱對你點頭，修為大幅提升！" },
             { text: "【奉茶遞水】恭敬遞上特級靈芝茶給監察人「鍋臂粉」", health: +5, salary: +1500, log: "鍋臂粉非常滿意，賞賜特別獎金！" }
           ]
-        },
-        {
-          text: "會長「張詠唱」突然在會議室走出來，要大家當場提出一個能讓公司營收翻倍的「世紀大戰略」。",
-          choices: [
-            { text: "【極致畫餅】侃侃而談元宇宙與 AI 的結合計畫", health: -10, salary: +3500, log: "張詠唱誇讚你有高層遠見！" },
-            { text: "【低頭裝忙】狂敲計算機假裝在算數據", health: 0, salary: 0, log: "成功避開會長視線，保住一口真氣。" }
-          ]
-        },
-        {
-          text: "董事長「張釋戒」拿著一本經營哲學，問你對於公司「組織精簡與加班常態化」有何看法。",
-          choices: [
-            { text: "【忠心耿耿】「董事長，我願化身基石，公司就是我的家！」", health: -15, salary: +3000, log: "張釋戒大為感動，稱讚你是公司中流砥柱！" },
-            { text: "【官方回答】「一切聽從公司安排與戰略規劃。」", health: 0, salary: +500, log: "不功不過，平穩過關。" }
-          ]
-        },
-        {
-          text: "監察人「鍋臂粉」手持算盤突襲查帳，質疑你們部門這個月的文具報支費用超標了！",
-          choices: [
-            { text: "【仔細核對】拿出完整的單據逐筆說明成本合理性", health: -10, salary: +1000, log: "鍋臂粉核對無誤，勉為其難批准報支。" },
-            { text: "【自掏腰包】「夫人息怒，超出的部分我自己補上！」", health: +5, salary: -500, log: "鍋臂粉滿意地點頭，稱讚你懂得為公司著想。" }
-          ]
-        },
-        {
-          text: "總經理「像蚊帳」突然下達最高等級防務指令，要求全公司徹查項目進度，且嚴禁向外透露半個字！",
-          choices: [
-            { text: "【連夜整理】將所有進度包裝成「仙界機密專案 PPT」", health: -15, salary: +4000, log: "像蚊帳總經理深感滿意，決定重用你！" },
-            { text: "【保持沉默】嚴守口風，絕不多嘴", health: 0, salary: 0, log: "安全過關，沒有捲入核心風暴。" }
-          ]
-        },
-        {
-          text: "執行董事「煦速正」看似和藹地走過來，問你：「最近各部門的工作節奏，你覺得有需要調整的地方嗎？」",
-          choices: [
-            { text: "【適度建言】提出了幾點優化跨部門溝通的實用建議", health: -5, salary: +2500, log: "煦速正點頭讚許，認為你具備管理思維。" },
-            { text: "【官方客套】「目前各部門配合都很順暢，長官帶領得很好！」", health: 0, salary: +1000, log: "煦速正笑了笑，沒再多說。" }
-          ]
         }
       ],
       channel7F: [
@@ -527,27 +553,6 @@
           choices: [
             { text: "【狂發 Email】連夜聯繫所有經銷門市搶架位", health: -15, salary: +3500, log: "蒼元經理大讚你具備通路突破能力！" },
             { text: "【巡店摸魚】假裝出差考察門市，實則去喝下午茶", health: +15, salary: 0, log: "身心靈獲得極大療癒，健康度回升！" }
-          ]
-        },
-        {
-          text: "通路部「蒼元經理」丟下一份競品報告，要你立刻分析對方為什麼能佔據最好的陳列位置。",
-          choices: [
-            { text: "【深入剖析】連夜做出一份競品通路策略分析圖表", health: -10, salary: +2500, log: "蒼元經理非常欣賞你的專業分析。" },
-            { text: "【簡要回報】回報是對方給了更高的上架費", health: 0, salary: 0, log: "經理嘆了口氣，沒再繼續追問。" }
-          ]
-        },
-        {
-          text: "通路部「蓮降副理」突然出現在你身後，拍拍你的肩膀問：「這個月通路給我們的業績預估，達標了嗎？」",
-          choices: [
-            { text: "【美化數據】拿出包含了預估潛在訂單的精美圖表", health: -10, salary: +3000, log: "蓮降副理滿意地點頭，賞賜了你保健食品。" },
-            { text: "【誠實回報】「還差一點，正在全力追趕中！」", health: -10, salary: +1000, log: "副理叮嚀你要加緊腳步。" }
-          ]
-        },
-        {
-          text: "通路部「濕小姐」展現強大的溝通協調能力，幫忙處理掉了一大堆通路經銷商的抱怨電話。",
-          choices: [
-            { text: "【送上甜點】買了一份下午茶表達感謝", health: +5, salary: -300, log: "濕小姐欣然接受，跨部門關係大躍進！" },
-            { text: "【接手追蹤】接下剩餘的行政後續追蹤工作", health: -10, salary: +1500, log: "順利協助通路部完成後續作業。" }
           ]
         }
       ],
@@ -558,28 +563,15 @@
             { text: "【英打神功】狂飆全英文 Email 與外商溝通細節", health: -10, salary: +3000, log: "張嫁瓷誇獎你具備國際事業部即戰力！" },
             { text: "【Google 翻譯】用翻譯軟體快速過一遍送出", health: +5, salary: -500, log: "海外客戶雖然看懂了，但語氣有點生硬。" }
           ]
-        },
-        {
-          text: "張嫁瓷問你，有沒有興趣協助海外事業部籌備下個月的跨國線上展會？",
-          choices: [
-            { text: "【全力支援】熬夜幫忙準備跨國簡報與產品資料", health: -15, salary: +4000, log: "展會大成功！你獲得了海外事業部的特別津貼。" },
-            { text: "【婉言謝絕】表示目前手邊的本土專案已滿載", health: +5, salary: 0, log: "張嫁瓷表示理解，尋找其他人支援。" }
-          ]
         }
       ],
+      reception: receptionEvents, // 加入櫃台事件池
       exStaff: [
         {
           text: "離職同仁「猴董」突然提著一整箱手搖飲料前來探班，身上散發著成功脫離苦海的光芒！",
           choices: [
             { text: "【大口喝下】接過全糖珍奶大口吸食", health: +15, salary: 0, log: "吸入高糖靈藥，身心獲得極大療癒！" },
             { text: "【請教經驗】連忙詢問外面的市場待遇與跳槽環境", health: +5, salary: +1000, log: "猴董分享了業界情報，身價大幅提升！" }
-          ]
-        },
-        {
-          text: "猴董悄悄把你拉到走廊角落，問你最近工作順不順利，有沒有考慮看新的機會。",
-          choices: [
-            { text: "【請教履歷】請猴董幫忙看自己的履歷怎麼包裝", health: +10, salary: +2000, log: "得到了高人指點，你的市場競爭力大大提升！" },
-            { text: "【敘舊敘舊】單純聊聊近況，感謝他的關心", health: +5, salary: 0, log: "收穫了一段真摯的職場友誼。" }
           ]
         }
       ],
@@ -590,27 +582,6 @@
             { text: "【端正坐姿】敲擊鍵盤發出陣陣修仙陣響", health: -5, salary: +1000, log: "塵協理點頭，認為你頗具社畜慧根。" },
             { text: "【切換視窗】瞬間壓低螢幕切換成 Excel 試算表", health: +5, salary: 0, log: "成功避開法眼，保住一口真氣。" }
           ]
-        },
-        {
-          text: "塵協理空降會議室，要求抽查所有人的週報與進度追蹤表，氣氛極度凝重！",
-          choices: [
-            { text: "【精美包裝】將日常例行公事包裝成「核心戰略項目」", health: -10, salary: +2500, log: "塵協理大為讚賞，稱你是公司的棟樑！" },
-            { text: "【誠實交卷】列出本週實際完成的日常工作", health: +5, salary: -500, log: "協理提醒你要再多增加一點主動性。" }
-          ]
-        },
-        {
-          text: "幕僚檢督人「塵協理」要求所有部門重新提交「KPI 與靈氣轉化率」的五維蜘蛛網分析圖。",
-          choices: [
-            { text: "【連夜畫圖】精心製作精美的五維數據圖呈上", health: -10, salary: +2000, log: "塵協理大讚圖表專業度極高，給予特別認可！" },
-            { text: "【套用舊檔】修改舊圖顏色後直接送出", health: 0, salary: +500, log: "僥倖平穩過關。" }
-          ]
-        },
-        {
-          text: "幕僚檢督人「塵協理」突襲查哨辦公桌，質疑你的桌面雜物過多會阻礙職場靈氣流動！",
-          choices: [
-            { text: "【當場整理】立刻將桌面收拾得一塵不染", health: -5, salary: +1000, log: "塵協理滿意地點頭，稱讚你態度端正。" },
-            { text: "【嚴肅辯稱】「協理，這是微道學中的『混亂秩序陣法』！」", health: 0, salary: -500, log: "塵協理冷笑一聲，扣除了少許績效。" }
-          ]
         }
       ],
       marketing6F: [
@@ -619,97 +590,6 @@
           choices: [
             { text: "【ChatGPT 附體】召喚 AI 工具極速生成提案", health: 0, salary: +2000, log: "榴主任與黃尾大為震撼，讚賞你的效率！" },
             { text: "【腦力激盪】強行燃燒腦細胞拼命想點子", health: -15, salary: +1500, log: "提案順利過關，但腦細胞大量損耗。" }
-          ]
-        },
-        {
-          text: "榴主任拿著一份剛出來的活動數據，邀你一起討論下一階段的行銷策略。",
-          choices: [
-            { text: "【主動請纓】提出了一套全新的社群操作方案", health: -10, salary: +3000, log: "榴主任非常欣賞你的衝勁，給予績效獎勵！" },
-            { text: "【配合執行】表示會全力協助目前的既定方針", health: 0, salary: +1000, log: "穩紮穩打完成任務。" }
-          ]
-        },
-        {
-          text: "黃尾跑來找你，說榴主任想要一個「既要有質感、又要搶眼、還要帶有文青感」的設計風格。",
-          choices: [
-            { text: "【提供參考圖】找了幾張質感極佳範本協助釐清需求", health: -5, salary: +1500, log: "成功幫團隊節省了大把溝通時間！" },
-            { text: "【交給美編】「這種專業問題，還是讓美編開示吧！」", health: 0, salary: 0, log: "成功甩鍋，沒讓自己捲入需求漩渦。" }
-          ]
-        },
-        {
-          text: "美編「瘀華」與「捲爺」面容枯槁，丟出一份名為《V99_最終版_真的最後改.psd》的圖檔。",
-          choices: [
-            { text: "【送上咖啡】祭出續命飲料安撫兩位美編", health: +5, salary: -500, log: "瘀華與捲爺大受感動，幫你的圖稿優先排版！" },
-            { text: "【提出微調】「這裡能不能再放大一點點？」", health: -20, salary: 0, log: "捲爺發怒觸發美編怨念，健康度大幅下降！" }
-          ]
-        },
-        {
-          text: "美編「瘀華」拿著兩張微小的配色方案問你：「你覺得 A 版的藍色比較好，還是 B 版的藍色比較好？」",
-          choices: [
-            { text: "【認真分析】從視覺心理學的角度仔細剖析差異", health: -5, salary: +1500, log: "瘀華大為震撼，把你視為知音！" },
-            { text: "【盲選一個】「我覺得 A 版看起來非常順眼！」", health: 0, salary: 0, log: "平安過關，沒有引發美編天劫。" }
-          ]
-        },
-        {
-          text: "美編「捲爺」發動「精修圖稿大術」，把原本混亂的活動主視覺整修得閃閃發亮！",
-          choices: [
-            { text: "【極致讚美】狂發誇誇貼圖「捲爺太強啦！」", health: +5, salary: +500, log: "捲爺心情大好，順便幫你把附圖也修了。" },
-            { text: "【請吃雞排】買了份雞排感謝捲爺的神救援", health: +5, salary: -500, log: "捲爺吃得非常開心，團隊氣氛融洽。" }
-          ]
-        },
-        {
-          text: "行銷企劃「榴主任」興致勃勃地跑過來，說要在社群上發起「社畜渡劫大挑戰」的爆款話題！",
-          choices: [
-            { text: "【連夜寫文】撰寫 10 條爆款文案協助推動話題", health: -10, salary: +2500, log: "話題大爆發！榴主任誇獎你是社群奇才！" },
-            { text: "【溫和提醒】「主任，這個流行梗上週已經退燒了...」", health: 0, salary: 0, log: "榴主任思考了一下，決定先收回提案。" }
-          ]
-        },
-        {
-          text: "行銷企劃「榴主任」深夜 11 點在通訊軟體發訊：「突然有個靈感，要不我們明天換個大方向？」",
-          choices: [
-            { text: "【秒回收到】強忍睡意回覆並開始調整架構", health: -15, salary: +2000, log: "展現了極高的敬業度，獲評優秀弟子！" },
-            { text: "【假裝早睡】隔天早上 8 點才回覆「剛睡醒才看到」", health: +5, salary: 0, log: "成功保住睡眠與健康。" }
-          ]
-        },
-        {
-          text: "行銷企劃「黃尾」跑來找你討教：「如何用最少預算打造仙界級流量網紅？」",
-          choices: [
-            { text: "【建議互惠試用】提供網紅互惠合作模式範本", health: -5, salary: +1500, log: "黃尾獲益良多，大大讚賞你的建議！" },
-            { text: "【搞笑出道】「要不黃尾你自己親自下場出道試試看？」", health: +5, salary: 0, log: "黃尾笑個不停，氣氛相當融洽。" }
-          ]
-        },
-        {
-          text: "行銷企劃「黃尾」正在核對社群抽獎名單，懷疑中獎帳號全都是同行競品的暗樁！",
-          choices: [
-            { text: "【交叉比對】幫忙逐一交叉檢查帳號真實性", health: -10, salary: +1500, log: "抓出好幾個假帳號，幫公司挽回損失！" },
-            { text: "【隨緣發獎】「反正獎品只是幾本筆記本，發一發算了吧。」", health: 0, salary: 0, log: "快速結案。" }
-          ]
-        },
-        {
-          text: "美編「瘀華」拿著一張灰階設計圖問你：「你覺得這個死寂灰有沒有呈現出一種低調的奢華感？」",
-          choices: [
-            { text: "【極致誇獎】「太棒了！展現了極簡禪意！」", health: +5, salary: +1000, log: "瘀華感動不已，將你視為美學知音！" },
-            { text: "【直言不諱】「感覺再加一點點亮粉紅色會比較搶眼...」", health: -10, salary: 0, log: "瘀華陷入美學懷疑，氣氛頓時僵住。" }
-          ]
-        },
-        {
-          text: "美編「瘀華」因為連三天改圖眼睛乾澀，掏出一瓶「仙界眼藥水」問你要不要滴滴看。",
-          choices: [
-            { text: "【感激接過】滴了兩滴，雙眼瞬間恢復光彩", health: +10, salary: 0, log: "眼疾消除，精力回復！" },
-            { text: "【回贈眼罩】婉拒並送給瘀華一副蒸氣眼罩", health: +5, salary: -300, log: "瘀華大受感動，表示以後優先處理你的圖稿！" }
-          ]
-        },
-        {
-          text: "美編「捲爺」發動「一鍵去背神術」，瞬間完成 500 張圖，但整個人陷入重度脫水狀態！",
-          choices: [
-            { text: "【送上飲料】連忙買了一瓶電解質水給捲爺續命", health: +5, salary: -200, log: "捲爺喝下靈藥，對你滿懷感激！" },
-            { text: "【趁機加圖】順手再補了兩張圖要求去背", health: -15, salary: 0, log: "捲爺怨氣爆發，發動怨念攻擊使你扣血！" }
-          ]
-        },
-        {
-          text: "美編「捲爺」拿著印出來的校樣，痛心疾首地表示印刷廠的墨水偏色了 0.5%！",
-          choices: [
-            { text: "【共同討伐】陪著捲爺一起發 Email 討伐印刷廠", health: -5, salary: +1000, log: "捍衛了品質，捲爺誇你有美術骨氣！" },
-            { text: "【溫柔安慰】「放心啦，肉眼真的完全看不出來！」", health: 0, salary: 0, log: "捲爺嘆了口氣，接受了現實。" }
           ]
         }
       ],
@@ -720,48 +600,6 @@
             { text: "【極限談判】對供應商展開多輪道德綁架與議價", health: -10, salary: +3000, log: "成功將成本砍下，症經理大加讚賞！" },
             { text: "【坦白說明】「這個預算在市場上真的買不到品質好的...」", health: 0, salary: -1000, log: "採購部門暫時凍結了你的申請單。" }
           ]
-        },
-        {
-          text: "採購經理「症經理」拿著合約書，找你確認這個月的資材採購項目與報價。",
-          choices: [
-            { text: "【逐條核對】細心檢查每一筆規格與條款", health: -10, salary: +2000, log: "抓出了一處價格漏洞，症經理誇獎你非常細心！" },
-            { text: "【快速簽署】確認大方向沒問題後直接蓋章", health: 0, salary: +500, log: "流程迅速推進。" }
-          ]
-        },
-        {
-          text: "採購「林小姐」發動超級砍價神功，硬生生幫你們部門省下了一大筆預算費用！",
-          choices: [
-            { text: "【熱烈鼓掌】「林小姐真不愧是公司的省錢專家！」", health: +5, salary: +1000, log: "林小姐滿意地點頭，允諾以後優先幫你處理單據。" },
-            { text: "【請喝飲料】倒了一杯好茶遞給林小姐", health: +5, salary: 0, log: "建立起良好的跨部門合作關係。" }
-          ]
-        },
-        {
-          text: "採購經理「症經理」展現無情談判神功，硬生生把廠商報價砍到剩下原本的三成！",
-          choices: [
-            { text: "【熱烈鼓掌】為症經理的無情談判功力瘋狂喝采", health: +5, salary: +1000, log: "症經理心情大好，讚賞你懂得欣賞談判藝術！" },
-            { text: "【默哀三秒】在心中為可憐的供應商默哀", health: 0, salary: 0, log: "無事發生。" }
-          ]
-        },
-        {
-          text: "採購經理「症經理」發現文具庫存裡的原子筆少了一盒，召集大家發起大調查！",
-          choices: [
-            { text: "【主動承認】坦承是自己上週借走了一支", health: 0, salary: +500, log: "症經理誇獎你誠實守信。" },
-            { text: "【保持沈默】默默低頭敲鍵盤假裝不關自己的事", health: 0, salary: 0, log: "安全躲過調查。" }
-          ]
-        },
-        {
-          text: "採購「林小姐」興奮地展示她透過超級團購優惠，幫公司省下了 500 元運費！",
-          choices: [
-            { text: "【大讚救星】「林小姐真是公司的財務救星！」", health: +5, salary: +1000, log: "林小姐笑得燦爛，給你分了一塊團購餅乾。" },
-            { text: "【跟團下單】順便請林小姐幫忙團購下午茶", health: +10, salary: -300, log: "吃到了美食，身心獲得極大放鬆！" }
-          ]
-        },
-        {
-          text: "採購「林小姐」拿著供應商送的過期月餅禮盒，問大家要不要拿去茶水間分著吃。",
-          choices: [
-            { text: "【婉言謝絕】表示自己在控糖，不吃甜食", health: 0, salary: 0, log: "成功保住腸胃健康。" },
-            { text: "【硬啃一塊】拿了一塊配熱茶硬啃下去", health: -15, salary: 0, log: "腸胃不適，健康度大幅下滑！" }
-          ]
         }
       ],
       hr6F: [
@@ -770,111 +608,6 @@
           choices: [
             { text: "【極致畫餅】講述自己對公司未來 5 年的職涯規劃", health: -5, salary: +4000, log: "四仙姑深受感動，評定你為優秀弟子！" },
             { text: "【實話實說】「我只是來努力工作領薪水買飯吃的。」", health: +10, salary: -1500, log: "四仙姑搖頭，記錄下你的主動性需提升。" }
-          ]
-        },
-        {
-          text: "人資四多花「琳達、珈稜、熟君、莉鏡」正在籌備員工聚餐，問你有沒有推薦的餐廳。",
-          choices: [
-            { text: "【熱情推薦】推薦了一家高 CP 值的在地美食", health: -5, salary: +1500, log: "採納了你的建議，同事們吃得非常滿意！" },
-            { text: "【隨大流】「只要是大家喜歡吃的我都 OK！」", health: 0, salary: 0, log: "安全牌，沒有犯錯。" }
-          ]
-        },
-        {
-          text: "人資「丞董」悄悄走過來，掏出一本《履歷優化心法》，問你想不想了解外面的市場行情。",
-          choices: [
-            { text: "【虛心請教】向丞董請教職場技能包裝技巧", health: +10, salary: +2000, log: "領悟了履歷精修術，個人市場身價提升！" },
-            { text: "【祝賀飛昇】祝福丞董未來跳槽發展順利", health: +5, salary: 0, log: "丞董請你喝了一杯手搖飲。" }
-          ]
-        },
-        {
-          text: "人資「噸鳴」發動神龍見首不見尾大術，在 10 分鐘內迅速穿梭辦公室蓋章與處理公文！",
-          choices: [
-            { text: "【精準攔截】在他出沒的黃金 5 分鐘內搶先蓋章", health: -5, salary: +1500, log: "成功蓋到章！公文流程順利推進！" },
-            { text: "【錯過時機】等你想找人時，噸鳴早已出外辦事", health: 0, salary: 0, log: "只能把文件放在桌上等待明天。" }
-          ]
-        },
-        {
-          text: "人資「琳達」拿著新人離職率圖表，發愁地問你：「現在的年輕人到底在想什麼？」",
-          choices: [
-            { text: "【認真分析】直言不諱指出薪資與職場福利問題", health: -5, salary: +2000, log: "琳達深感共鳴，感謝你的真誠建言！" },
-            { text: "【官方回答】「可能大家有各自的生涯規劃吧！」", health: 0, salary: 0, log: "官方客套，平穩過關。" }
-          ]
-        },
-        {
-          text: "人資「琳達」開啟出勤審查眼，發現你上週有一次刷卡記錄遲到了 1 分鐘！",
-          choices: [
-            { text: "【解釋電梯】說明是因為電梯太擠擠不上", health: 0, salary: 0, log: "琳達念在初犯，給予口頭告誡。" },
-            { text: "【坦然接受】坦然接受扣除當月全勤獎金", health: 0, salary: -1000, log: "修為微微受損。" }
-          ]
-        },
-        {
-          text: "人資「珈稜」熱情地邀請你報名參加公司舉辦的「職場社畜攀岩體驗營」！",
-          choices: [
-            { text: "【熱情報名】展現團隊活力與社畜精神", health: -10, salary: +2000, log: "體能消耗極大，但獲得人資讚許！" },
-            { text: "【優雅婉拒】藉口身體不適優雅婉拒", health: +5, salary: 0, log: "保住了週末休息時間。" }
-          ]
-        },
-        {
-          text: "人資「珈稜」在發放三節禮金時，順便遞給你一份「員工滿意度調查」！",
-          choices: [
-            { text: "【全填滿分】毫不猶豫全部給予 5 星好評", health: 0, salary: +1000, log: "珈稜非常滿意，過程十分順暢！" },
-            { text: "【匿名寫實話】寫下關於加班與薪資的真心建議", health: -5, salary: 0, log: "內心得到了排解。" }
-          ]
-        },
-        {
-          text: "人資「熟君」正為招募計畫頭痛，問你有沒有認識的仙界高手可以推薦面試。",
-          choices: [
-            { text: "【推薦前同事】提供優秀前同事履歷拿推薦獎金", health: -5, salary: +3000, log: "成功推薦！獲得公司獎勵津貼！" },
-            { text: "【坦言躺平】「我身邊的朋友目前全都在躺平...」", health: 0, salary: 0, log: "熟君嘆了口氣表示理解。" }
-          ]
-        },
-        {
-          text: "人資「熟君」嚴肅地通知你，根據勞健保新規定，這個月的投保級距有所調整。",
-          choices: [
-            { text: "【仔細核對】認真核對薪資單上的各項扣繳細節", health: -5, salary: +1000, log: "確認無誤，展現了細心的態度。" },
-            { text: "【點頭表示了解】直接簽名確認收下薪資單", health: 0, salary: 0, log: "流程順利完成。" }
-          ]
-        },
-        {
-          text: "人資「莉鏡」在走廊舉辦「每日步數大比拼」，鼓勵大家多走樓梯少搭電梯！",
-          choices: [
-            { text: "【硬踩樓梯】當天硬爬 100 階樓梯拿下第一名", health: -10, salary: +1500, log: "雙腿發抖，但贏得了運動獎品！" },
-            { text: "【繼續搭電梯】默默選擇無視，繼續等電梯", health: +5, salary: 0, log: "保住體力。" }
-          ]
-        },
-        {
-          text: "人資「莉鏡」拿著新的教育訓練問卷，追著你要求立刻填寫。",
-          choices: [
-            { text: "【秒填送回】快速勾選完畢立刻交回", health: 0, salary: +500, log: "莉鏡讚賞你的辦事效率！" },
-            { text: "【稍後處理】表示手邊工作忙完再寫", health: 0, salary: 0, log: "平穩過關。" }
-          ]
-        },
-        {
-          text: "人資「丞董」私下傳了一份「外部競業薪資水平報告」給你，眼神意義深遠。",
-          choices: [
-            { text: "【暗示能力】暗示長官「自己其實在市場上也蠻有競爭力的」", health: -5, salary: +3000, log: "丞董聽懂了你的意思，幫你爭取到了調薪機會！" },
-            { text: "【感謝情報】禮貌感謝丞董提供的寶貴資訊", health: 0, salary: +500, log: "收穫寶貴情報。" }
-          ]
-        },
-        {
-          text: "人資「丞董」在茶水間分享他最近悟出的「職場退路學與跳槽心法」。",
-          choices: [
-            { text: "【專心聽講】認真聽講並汲取精華經驗", health: +10, salary: +1000, log: "受益匪淺，個人身價提升！" },
-            { text: "【禮貌離開】禮貌打招呼後藉故離開", health: 0, salary: 0, log: "回到座位繼續工作。" }
-          ]
-        },
-        {
-          text: "人資「噸鳴」發動「瞬移蓋章大術」，在你剛掏出假單的瞬間就已蓋完章離開！",
-          choices: [
-            { text: "【驚嘆神速】對這等蓋章速度佩服得五體投地", health: +5, salary: 0, log: "假單順利完成核准！" },
-            { text: "【檢查印章】確認印章有沒有蓋倒或蓋錯位置", health: 0, salary: +500, log: "印章完美無瑕。" }
-          ]
-        },
-        {
-          text: "人資「噸鳴」在公文櫃前施展整理法陣，將十年的舊檔案整理得井井有條！",
-          choices: [
-            { text: "【送上飲料】遞上一瓶能量飲料表達敬意", health: +5, salary: -200, log: "噸鳴收下飲料，對你微笑致意。" },
-            { text: "【請教心法】請教檔案高效歸檔的心法", health: -5, salary: +1000, log: "學到了寶貴的歸檔技巧！" }
           ]
         }
       ],
@@ -885,76 +618,6 @@
             { text: "【閉目冥想】表面點頭，實則坐在後排閉目養神", health: +15, salary: 0, log: "獲得極佳補眠機會，健康度大幅提升！" },
             { text: "【積極發言】舉手回答龜董與柯董的現場提問", health: -10, salary: +2500, log: "獲得龜董與柯董讚許，獎勵職場修為！" }
           ]
-        },
-        {
-          text: "教育中心「小輓」與「星蚊」突襲檢查，問你能不能隨口說出公司的 3 大核心企業精神。",
-          choices: [
-            { text: "【流利背誦】「團隊、創新、追求卓越！」", health: -5, salary: +1500, log: "小輓與星蚊滿意地遞給你一顆喉糖表示獎勵。" },
-            { text: "【裝傻笑笑】「在我的心中，但一時說不出口...」", health: 0, salary: -500, log: "被提醒要多複習內部宣導文件。" }
-          ]
-        },
-        {
-          text: "教育中心「龜董」與「柯董」拿著新印好的訓練手冊，問你對於未來的課程規劃有什麼建議。",
-          choices: [
-            { text: "【提出實務需求】希望能多開一點自動化工具與 AI 應用課", health: -5, salary: +2000, log: "龜董與柯董讚賞你的學習熱情！" },
-            { text: "【表示滿意】「目前的課程安排已經非常完善！」", health: 0, salary: +500, log: "長官們滿意地點點頭。" }
-          ]
-        },
-        {
-          text: "教育中心「小輓」籌備了一場「高效簡報表達術」講座，問你想不想擔任示範講師。",
-          choices: [
-            { text: "【勇敢上台】展現出色演講天賦與社畜氣場", health: -10, salary: +3000, log: "獲得全場熱烈掌聲，職場影響力提升！" },
-            { text: "【坐在台下】婉拒並表示坐在台下認真學習", health: +5, salary: 0, log: "收穫不少簡報技巧。" }
-          ]
-        },
-        {
-          text: "教育中心「小輓」在群組發起「每日一句職場勵志金句」簽到活動！",
-          choices: [
-            { text: "【準時簽到】每天準時回覆勵志貼圖簽到", health: -5, salary: +1000, log: "獲得教育中心頒發的積極參與獎！" },
-            { text: "【設為靜音】將群組設為靜音無視訊息", health: 0, salary: 0, log: "耳根清淨。" }
-          ]
-        },
-        {
-          text: "教育中心「星蚊」拿著一本《領導力修煉秘笈》，問你對於新人培訓有何看法。",
-          choices: [
-            { text: "【建議實務】建議課程多安排實務演練與案例剖析", health: -5, salary: +2000, log: "星蚊非常採納你的實務建議！" },
-            { text: "【讚賞內容】讚賞目前的理論架構已經非常完整", health: 0, salary: +500, log: "星蚊高興地笑笑。" }
-          ]
-        },
-        {
-          text: "教育中心「星蚊」突襲抽查你的受訓課後心得報告！",
-          choices: [
-            { text: "【連夜撰寫】連夜生出 500 字深度學習心得呈上", health: -10, salary: +1500, log: "星蚊誇獎你的學習態度非常端正！" },
-            { text: "【AI 極速生成】用 AI 工具 1 分鐘生成學習報告", health: 0, salary: +1000, log: "報告順利過關。" }
-          ]
-        },
-        {
-          text: "教育中心「龜董」拿出「養生龜息大法」教材，邀你午休時一起練習呼吸吐納。",
-          choices: [
-            { text: "【跟著吐納】跟著龜董一起吐納調節呼吸", health: +15, salary: 0, log: "真氣運轉順暢，健康度顯著回復！" },
-            { text: "【假裝打電話】藉口有客戶電話急忙跑開", health: 0, salary: 0, log: "成功溜掉。" }
-          ]
-        },
-        {
-          text: "教育中心「龜董」在會議上慢條斯理地講述公司三十年前的創業艱辛故事。",
-          choices: [
-            { text: "【認真筆記】認真聽講並做筆記展現尊重", health: -5, salary: +1500, log: "龜董非常欣慰，覺得你是可塑之才！" },
-            { text: "【眼神發呆】眼神發呆進入冥想放空狀態", health: +10, salary: 0, log: "腦袋得到了充份休息。" }
-          ]
-        },
-        {
-          text: "教育中心「柯董」拿出「高階談判對決」課程問卷，希望你給予真實評價。",
-          choices: [
-            { text: "【大力讚賞】大讚課程內容扎實，受益匪淺", health: 0, salary: +1000, log: "柯董滿意地點點頭。" },
-            { text: "【誠實建議】誠實建議講課節奏可以再加快一點", health: -5, salary: +1500, log: "柯董感謝你的建設性反饋！" }
-          ]
-        },
-        {
-          text: "教育中心「柯董」親自示範「如何用眼神壓制談判對手」的職場奇術！",
-          choices: [
-            { text: "【配合演練】積極配合演練展現學習成果", health: -5, salary: +2000, log: "柯董誇獎你眼神帶有強烈殺氣！" },
-            { text: "【忍住不笑】咬緊牙關忍住不笑場", health: +5, salary: 0, log: "成功保住禮貌。" }
-          ]
         }
       ],
       it6F: [
@@ -963,90 +626,6 @@
           choices: [
             { text: "【尋求天團救援】轉向聯繫廖董、周先生、許先生、謝先生救援", health: +5, salary: +1000, log: "資訊天團發動重開機大術，系統恢復！" },
             { text: "【試圖解讀貼圖】努力跟煌經理用貼圖對話溝通問題", health: -15, salary: 0, log: "陷入深深的自我懷疑與溝通迷宮。" }
-          ]
-        },
-        {
-          text: "資訊中心「煌經理」在群組裡發了一串深奧的系統維護公告，並附上了幾個謎之貼圖。",
-          choices: [
-            { text: "【回覆按讚】默默按了一個「讚」表達收到", health: 0, salary: +500, log: "平安無事，維持禮貌。" },
-            { text: "【認真提問】私訊詢問這次維護是否會影響資料備份", health: -5, salary: +1000, log: "煌經理回傳了一個讚的貼圖，代表一切正常。" }
-          ]
-        },
-        {
-          text: "資訊天團（廖董、周先生、許先生、謝先生）發動【全公司網路大升級】，網路暫停 1 小時！",
-          choices: [
-            { text: "【光明正大摸魚】趁機伸展筋骨、去倒水放空", health: +15, salary: 0, log: "沒有網路的世界太美好了，健康度大幅回復！" },
-            { text: "【開手機熱點】繼續拼命整理離線文件與文稿", health: -15, salary: +2000, log: "展現了極高敬業度，獲得長官注意。" }
-          ]
-        },
-        {
-          text: "資訊中心「煌經理」在 IT 群組裡發送了一張貓咪貼圖，然後瞬間收回！",
-          choices: [
-            { text: "【私訊詢問】私訊發問「經理剛剛傳了什麼可愛貼圖？」", health: 0, salary: +500, log: "煌經理回傳了一個謎之微笑貼圖。" },
-            { text: "【假裝沒看到】默默無視，繼續打自己的程式碼", health: 0, salary: 0, log: "平安無事。" }
-          ]
-        },
-        {
-          text: "資訊中心「煌經理」親自來幫你的電腦更換防毒軟體，過程中一句話也沒說。",
-          choices: [
-            { text: "【恭敬奉茶】恭敬遞上一杯特級黑咖啡", health: +5, salary: +1000, log: "煌經理默默喝完，順手幫你優化了記憶體！" },
-            { text: "【保持安靜】安靜坐在旁邊不敢發出聲音", health: 0, salary: 0, log: "防毒軟體順利更新完畢。" }
-          ]
-        },
-        {
-          text: "資訊天團「廖董」發動「伺服器除靈術」，成功搞定停擺半天的核心資料庫！",
-          choices: [
-            { text: "【高呼神人】高喊「廖董真是資訊界的救世主！」", health: +5, salary: +1000, log: "廖董嘴角微微上揚，幫你提升了網路頻寬！" },
-            { text: "【遞上飲料】送上一罐能量飲料表達感謝", health: +5, salary: -200, log: "廖董接過飲料，繼續默默拯救系統。" }
-          ]
-        },
-        {
-          text: "資訊天團「廖董」發現你把電腦密碼設成 `123456`，對你進行長達 10 分鐘的資安教育！",
-          choices: [
-            { text: "【虛心改密碼】經典 16 位超複雜密碼", health: -5, salary: +1500, log: "廖董點頭表示認可，資安意識升級！" },
-            { text: "【偷偷改成 12345678】偷偷加了兩位數字敷衍過關", health: 0, salary: -500, log: "被廖董看穿，扣除少許績效獎金。" }
-          ]
-        },
-        {
-          text: "資訊天團「周先生」幫你更換了全新的雙螢幕設備，讓你的工作效率瞬間翻倍！",
-          choices: [
-            { text: "【請喝手搖】感動流淚，請周先生喝一杯全糖珍奶", health: +5, salary: -300, log: "周先生非常開心，答應以後設備優先升級你！" },
-            { text: "【熱烈道謝】連聲表達感激之意", health: 0, salary: +1000, log: "工作環境大幅改善！" }
-          ]
-        },
-        {
-          text: "資訊天團「周先生」發現有人偷偷在公司電腦下載遊戲，準備展開全網資安查緝！",
-          choices: [
-            { text: "【趕緊關閉】連忙關掉手機連線與背景摸魚軟體", health: +5, salary: 0, log: "成功避開查緝風頭！" },
-            { text: "【配合舉報】主動舉報隔離區異常封包", health: -5, salary: +2000, log: "獲周先生誇獎具備資安防範意識！" }
-          ]
-        },
-        {
-          text: "資訊天團「許先生」連夜撰寫自動化腳本，幫全公司省去大量人工輸入單據的時間！",
-          choices: [
-            { text: "【送上點心】送上高級點心盒感謝許先生的神救援", health: +5, salary: -500, log: "許先生非常開心，跨部門合作融洽！" },
-            { text: "【請教自動化】請教許先生如何幫自己寫摸魚自動化腳本", health: -5, salary: +2000, log: "學會了自動化技能，效率大提升！" }
-          ]
-        },
-        {
-          text: "資訊天團「許先生」在機房放置了一包「綠色乖乖」，並嚴禁任何人拿去吃！",
-          choices: [
-            { text: "【恭敬膜拜】恭敬膜拜機房神物，祈求系統不當機", health: +5, salary: 0, log: "獲得機房神物保佑，系統運行平穩！" },
-            { text: "【警告同事】提醒旁邊想拿乖乖吃的同事「那是鎮壓伺服器的靈物！」", health: 0, salary: +500, log: "保住了機房和平。" }
-          ]
-        },
-        {
-          text: "資訊天團「謝先生」幫你解決了印表機嚴重卡紙天劫，手法乾淨俐落！",
-          choices: [
-            { text: "【大讚救星】誇獎謝先生是「仙界印表機救星！」", health: +5, salary: +1000, log: "謝先生露出了自信的微笑！" },
-            { text: "【請教絕招】請教如何才能不讓印表機卡紙的訣竅", health: -5, salary: +1000, log: "領悟了印表機順紙心法！" }
-          ]
-        },
-        {
-          text: "資訊天團「謝先生」進行例行性資安社交工程演練，寄了一封假的中獎郵件。",
-          choices: [
-            { text: "【敏銳檢舉】敏銳識破釣魚郵件並按檢舉按鈕", health: 0, salary: +2000, log: "通過資安演練，獲得資安通報獎金！" },
-            { text: "【不小心點進去】手滑點了進去，跳出警告畫面", health: -10, salary: 0, log: "被要求重新補考資安宣導課程。" }
           ]
         }
       ],
@@ -1057,15 +636,16 @@
             { text: "【平安是福】默默領薪水，安分守己", health: -2, salary: +500, log: "平凡的一個月過去了，修為微微提升。" },
             { text: "【茶水間摸魚】泡杯咖啡，跟旁邊同事閒聊", health: +5, salary: 0, log: "在茶水間補充了一點靈氣。" }
           ]
-        },
-        {
-          text: "你今年 75 歲了，後輩好奇地問你為什麼還不辦理退休，你指了指身後長官畫的大餅...",
-          minAge: 75,
-          choices: [
-            { text: "【老當益壯】大喊「我還能再加班 10 年！」", health: -10, salary: +3000, log: "全公司都被你這股堅韌不拔的社畜精神震懾！" },
-            { text: "【拄拐摸魚】靠著老資歷在辦公室安詳打瞌睡", health: +20, salary: 0, log: "無人敢打擾你，健康度得到極大滋補！" }
-          ]
         }
+      ]
+    };
+
+    // 🐟 不分年齡的摸魚特別事件
+    const slackOffEvent = {
+      text: "🐟 <b>【職場靈魂修煉：極致摸魚】</b><br>工作是公司的，命是自己的！摸魚是不分年紀的！你開啟了摸魚結界（蹲廁所滑手機 / 去樓下買咖啡 / 假裝思考哲學問題）。",
+      choices: [
+        { text: "【安心摸魚】把手機螢幕亮度調低，享受半小時純粹的自由", health: +20, salary: 0, log: "精神力與健康度大幅回復，這才是真正的修仙心法！" },
+        { text: "【帶薪拉屎】在洗手間佔領黃金頭等艙蹲滿 40 分鐘", health: +15, salary: +500, log: "白嫖了公司的時間與衛生紙，身心靈極度舒爽！" }
       ]
     };
 
@@ -1192,6 +772,7 @@
       document.getElementById("realm").innerText = realms[state.realmIndex].name;
       document.getElementById("salary").innerText = state.salary.toLocaleString();
       document.getElementById("age").innerText = state.age;
+      document.getElementById("max-age").innerText = state.maxAge;
       document.getElementById("health").innerText = state.health;
 
       checkStatus();
@@ -1211,8 +792,40 @@
         return;
       }
 
+      // 👵 1. 滿 65 歲退休與強行回聘選擇點
+      if (state.age >= 65 && !state.isRehired) {
+        document.getElementById("event-text").innerHTML = `👵 <b>【職場渡劫：滿 65 歲退休抉擇】</b><br>你今年滿 65 歲，到了法定退休年齡！長官丟出一份《強行回聘續命陣合約》，問你要功德圓滿退休，還是繼續退而不休？`;
+        const choicesContainer = document.getElementById("choices");
+        choicesContainer.innerHTML = "";
+
+        const retireBtn = document.createElement("button");
+        retireBtn.className = "choice-btn";
+        retireBtn.innerText = "🎉 【功德圓滿】順利退休，享受優閒老後生活！";
+        retireBtn.onclick = () => {
+          state.isDead = true;
+          document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 職場功德圓滿（65 歲順利退休）</b><br>你成功幹到了 65 歲！帶著豐富的退休金安享晚年，職場修仙圓滿落幕！`;
+          choicesContainer.innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
+        };
+
+        const rehireBtn = document.createElement("button");
+        rehireBtn.className = "choice-btn";
+        rehireBtn.innerText = "⚡ 【強行回聘續命陣】簽下合約！老子還能幹到 100 歲飛昇！";
+        rehireBtn.onclick = () => {
+          state.isRehired = true;
+          state.maxAge = 100;
+          addLog("⚠️ 簽下【強行回聘續命陣】！壽元上限提升至 100 歲，你化身老顧問繼續渡劫！");
+          updateUI();
+          nextTurn();
+        };
+
+        choicesContainer.appendChild(retireBtn);
+        choicesContainer.appendChild(rehireBtn);
+        return;
+      }
+
+      // 💯 滿 100 歲大圓滿
       if (state.age >= 100) {
-        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 終極職場大圓滿（百歲真仙飛昇）</b><br>你成功幹到了 100 歲！功德圓滿飛昇仙界！`;
+        document.getElementById("event-text").innerHTML = `<b style="color:#22c55e;">🎉 終極職場大圓滿（百歲真仙飛昇）</b><br>你成功幹到了 100 歲！公司頒發「萬年老社畜尊者」金牌，你功德圓滿飛昇仙界！`;
         document.getElementById("choices").innerHTML = `<button class="choice-btn" onclick="resetGame()">🔄 再來一世職場修仙</button>`;
         return;
       }
@@ -1232,12 +845,13 @@
           { category: 'rare', weight: 1 },
           { category: 'debuff', weight: 5 },
           { category: 'high7F', weight: 5 },
-          { category: 'channel7F', weight: 10 },
-          { category: 'overseas7F', weight: 10 },
+          { category: 'channel7F', weight: 8 },
+          { category: 'overseas7F', weight: 8 },
+          { category: 'reception', weight: 10 },
           { category: 'exStaff', weight: 5 },
-          { category: 'supervisor6F', weight: 10 },
-          { category: 'marketing6F', weight: 10 },
-          { category: 'purchasing6F', weight: 10 },
+          { category: 'supervisor6F', weight: 8 },
+          { category: 'marketing6F', weight: 8 },
+          { category: 'purchasing6F', weight: 8 },
           { category: 'hr6F', weight: 10 },
           { category: 'edu6F', weight: 10 },
           { category: 'it6F', weight: 10 },
@@ -1247,13 +861,14 @@
         weights = [
           { category: 'rare', weight: 1 },
           { category: 'debuff', weight: 5 },
+          { category: 'reception', weight: 15 },
           { category: 'exStaff', weight: 5 },
-          { category: 'supervisor6F', weight: 15 },
-          { category: 'marketing6F', weight: 15 },
-          { category: 'purchasing6F', weight: 15 },
-          { category: 'hr6F', weight: 15 },
-          { category: 'edu6F', weight: 15 },
-          { category: 'it6F', weight: 15 },
+          { category: 'supervisor6F', weight: 12 },
+          { category: 'marketing6F', weight: 12 },
+          { category: 'purchasing6F', weight: 12 },
+          { category: 'hr6F', weight: 12 },
+          { category: 'edu6F', weight: 11 },
+          { category: 'it6F', weight: 11 },
           { category: 'daily', weight: 4 }
         ];
       }
@@ -1272,9 +887,8 @@
 
       const pool = categorizedEvents[selectedCategory];
       
-      // 🎯 過濾年齡限定等條件
       const availableEvents = pool.filter(e => {
-        if (e.minAge && state.age < e.minAge) return false;
+        if (e.minRealmIndex && state.realmIndex < e.minRealmIndex) return false;
         return true;
       });
 
@@ -1286,9 +900,32 @@
       if (state.isDead) return;
 
       state.months++;
-      if (state.months % 12 === 0) state.age++;
 
-      const randomEvent = getRandomEventByWeight();
+      // 🧧 4. 每年年底（滿 12 個月）結算年終加薪（年資/5）
+      if (state.months % 12 === 0) {
+        state.age++;
+        state.seniority++;
+        
+        // 加速體驗：每年增加當前年資的 1/5 作為年終特別調薪加成！
+        const bonusMultiplier = (state.seniority / 5) * 0.05; // 每 5 年資加成 5% 薪資
+        const yearEndBonus = Math.floor(state.salary * bonusMultiplier);
+        
+        if (yearEndBonus > 0) {
+          state.salary += yearEndBonus;
+          addLog(`🧧 滿 1 年！公司發放【年終大禮包】（年資 ${state.seniority} 年，加成 1/5），月薪永久加薪 $${yearEndBonus.toLocaleString()}！`);
+        } else {
+          addLog(`🧧 滿 1 年！年資滿 ${state.seniority} 年，繼續邁向下一年的職場修仙！`);
+        }
+      }
+
+      // 🐟 2. 每 3 年（36 個月）強制觸發不分年齡的摸魚大事件！
+      let randomEvent;
+      if (state.months > 0 && state.months % 36 === 0) {
+        randomEvent = slackOffEvent;
+      } else {
+        randomEvent = getRandomEventByWeight();
+      }
+
       document.getElementById("event-text").innerHTML = randomEvent.text;
 
       const choicesContainer = document.getElementById("choices");
@@ -1379,7 +1016,19 @@
     }
 
     function resetGame() {
-      state = { origin: "normal", realmIndex: 0, salary: 28000, age: 22, months: 0, health: 100, isDead: false, hasMetRichLady: false };
+      state = { 
+        origin: "normal", 
+        realmIndex: 0, 
+        salary: 28000, 
+        age: 22, 
+        maxAge: 65, 
+        months: 0, 
+        seniority: 0, 
+        health: 100, 
+        isDead: false, 
+        hasMetRichLady: false, 
+        isRehired: false 
+      };
       document.getElementById("origin-modal").style.display = "flex";
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
     }
