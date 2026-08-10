@@ -332,7 +332,6 @@
       text-shadow: 0 0 4px rgba(0,0,0,0.8);
     }
 
-    /* 🏆 成就與履歷表專用樣式 */
     .achievement-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -375,7 +374,7 @@
 </head>
 <body>
 
-  <div class="version-tag">v1.03</div>
+  <div class="version-tag">v1.04</div>
 
   <!-- 🏆 成就總覽 Modal -->
   <div id="achievements-modal" class="modal-overlay" style="display: none;">
@@ -476,7 +475,6 @@
       { name: "萬年老顧問 (幹到死)", minSalary: 250000, nextSalary: Infinity }
     ];
 
-    // 🏆 成就清單定義
     const achievementsList = [
       { id: "richLady", title: "紅塵大圓滿", desc: "接受神秘富婆包養，成功脫離職場苦海。", icon: "💖" },
       { id: "laidOff", title: "優化淘汰者", desc: "在公司大裁員天劫中被 HR 優化解僱。", icon: "☠️" },
@@ -501,12 +499,10 @@
       isRehired: false,
       hasTriggered5YearChengDong: false,
       hasTriggeredGroupLeaderChengDong: false,
-      // 📊 單局履歷統計數據
       scapegoatCount: 0,
       slackCount: 0
     };
 
-    // 💾 localStorage 跨局存檔讀取與初始化
     function getSaveData() {
       const defaultSave = {
         unlockedAchievements: [],
@@ -588,7 +584,7 @@
           choices: [
             { text: "【賣屁股求榮】極力諂媚討好上級，試圖獻身保住飯碗", specialOutcome: "laidOffEnding" },
             { text: "【大打出手】忍無可忍！直接對長官發動拳腳大陣，痛打一頓", specialOutcome: "jailGuardOutcome" },
-            { text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」", health: -10, salary: +3000, log: "長官投鼠俱器，被迫加薪安撫你的社畜怨念！" }
+            { text: "【玉石俱焚】把核心系統資料加解密鎖死，大喊「裁了我明天公司就崩潰！」", health: -10, salary: +3000, log: "長官投鼠忌器，被迫加薪安撫你的社畜怨念！" }
           ]
         }
       ],
@@ -1276,11 +1272,19 @@
       ]
     };
 
+    // 💀 1.04 擴充：全量 11 種無厘頭荒謬死法（原4種完整保留，新增7種）
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
       "被長官畫的「未來公司上市分紅」大餅當場噎死。",
       "背了太多同門師兄的黑鍋，脊椎過載爆裂而亡。",
-      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。"
+      "連續加班 72 小時，精神走火入魔，把鍵盤當成靈石吞下。",
+      "被隔壁同事伸展時的「人體工學椅」氣壓桿爆裂波及，當場化作冤魂。",
+      "在茶水間連續狂飲 8 杯全糖特濃仙界美式咖啡，心臟過載當場羽化登仙。",
+      "影印機卡紙時試圖用內力硬拔，結果被捲入「影印機時空裂隙」消失無蹤。",
+      "午休微波便當因忘記拿掉鋁箔紙爆出天劫紫電，不幸當場渡劫失敗身亡。",
+      "試圖徒手打死總經理「像蚊帳」身邊的仙界蚊子，結果被反震真氣震碎五臟六腑。",
+      "聽到長官傳來「這很簡單，你順手抓一下數據」的聲音，因壓力過載當場心智崩潰暴斃。",
+      "外出拜訪客戶下大雨忘記帶傘，在暴雨中狂奔被「社畜酸雨天劫」洗刷至骨肉消融。"
     ];
 
     const bgmTracks = ["bgm1.mp3", "bgm2.mp3", "bgm3.mp3"];
@@ -1435,14 +1439,13 @@
       }
     }
 
-    // 📜 終局履歷結算與數據保存
     function triggerEndGame(endingTitle, endingDesc) {
       const saveData = getSaveData();
       saveData.totalGames++;
       if (state.salary > saveData.maxSalaryEver) saveData.maxSalaryEver = state.salary;
       localStorage.setItem("work_xiuxian_save", JSON.stringify(saveData));
 
-      const yearsWorked = Math.floor(state.months / 12);
+      const yearsWorked = Math.floor(state.months / 6); // 👈 1.04 履歷表同步改為按6次過1年
       const originNames = { rich: "富家子弟 🏰", normal: "平民百姓 🏠", beggar: "街頭乞丐 🪨" };
 
       const resumeContent = `
@@ -1452,7 +1455,7 @@
         <b>👤 出身背景：</b>${originNames[state.origin]}<br>
         <b>💼 最終職位：</b>${realms[state.realmIndex].name}<br>
         <b>💰 最終月薪：</b>$${state.salary.toLocaleString()}<br>
-        <b>⏳ 服役年資：</b>${yearsWorked} 年 (${state.months} 個月)<br>
+        <b>⏳ 服役年資：</b>${yearsWorked} 年 (${state.months} 次決策)<br>
         <b>🍲 歷史背鍋：</b>${state.scapegoatCount} 次<br>
         <b>☕ 摸魚次數：</b>${state.slackCount} 次<br>
         <b>🏆 累計遊玩：</b>第 ${saveData.totalGames} 局
@@ -1556,9 +1559,10 @@
 
       state.months++;
 
-      if (state.months > 0 && state.months % 12 === 0) {
+      // ⏱️ 1.04 調整：點擊 6 次過 1 年 (每 6 次增長 1 歲與發放年終)
+      if (state.months > 0 && state.months % 6 === 0) {
         state.age++;
-        const yearsWorked = Math.floor(state.months / 12);
+        const yearsWorked = Math.floor(state.months / 6);
         const bonusSalary = Math.floor(state.salary * (yearsWorked / 5) * 0.1);
         if (bonusSalary > 0) {
           state.salary += bonusSalary;
@@ -1568,7 +1572,8 @@
 
       let randomEvent;
 
-      if (state.months === 60 && !state.hasTriggered5YearChengDong) {
+      // ⏱️ 1.04 同步調整保底時機 (30次決策等同約5年)
+      if (state.months === 30 && !state.hasTriggered5YearChengDong) {
         state.hasTriggered5YearChengDong = true;
         randomEvent = chengDong5YearGuaranteeEvent;
       } 
@@ -1576,7 +1581,8 @@
         state.hasTriggeredGroupLeaderChengDong = true;
         randomEvent = chengDongGroupLeaderGuaranteeEvent;
       }
-      else if (state.months > 0 && state.months % 36 === 0) {
+      // ⏱️ 1.04 摸魚事件調整為每 18 次決策 (約每 3 年) 觸發一次
+      else if (state.months > 0 && state.months % 18 === 0) {
         randomEvent = periodicSlackingEvent;
       } 
       else {
