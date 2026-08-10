@@ -175,7 +175,7 @@
 
     .header-banner {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     h1 {
@@ -202,7 +202,7 @@
       padding: 14px;
       border-radius: 10px;
       border: 1px solid #38bdf8;
-      margin-bottom: 18px;
+      margin-bottom: 15px;
       font-size: 0.92rem;
       box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
@@ -214,6 +214,25 @@
     .stat-item span {
       color: #38bdf8;
       font-weight: bold;
+    }
+
+    /* 🎨 1.05 新增：動態小動畫視窗樣式 */
+    .anim-window-container {
+      width: 100%;
+      height: 120px;
+      background: #020617;
+      border: 1px solid #38bdf8;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+
+    #anim-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .event-box {
@@ -374,7 +393,7 @@
 </head>
 <body>
 
-  <div class="version-tag">v1.04</div>
+  <div class="version-tag">v1.05</div>
 
   <!-- 🏆 成就總覽 Modal -->
   <div id="achievements-modal" class="modal-overlay" style="display: none;">
@@ -458,6 +477,11 @@
         <div class="stat-item">健康度：<span id="health">100</span>%</div>
       </div>
 
+      <!-- 🎨 1.05 新增：事件動態小動畫視窗 -->
+      <div class="anim-window-container">
+        <canvas id="anim-canvas"></canvas>
+      </div>
+
       <div id="event-text" class="event-box">請選擇出身開局...</div>
       <div id="choices" class="choices-container"></div>
       <div id="game-log" class="log-box">修仙履歷展開...<br></div>
@@ -500,7 +524,9 @@
       hasTriggered5YearChengDong: false,
       hasTriggeredGroupLeaderChengDong: false,
       scapegoatCount: 0,
-      slackCount: 0
+      slackCount: 0,
+      currentCategory: "daily",
+      isTribulation: false
     };
 
     function getSaveData() {
@@ -816,7 +842,7 @@
         {
           text: "幕僚檢督人「塵協理」突襲查哨辦公桌，質疑你的桌面雜物過多會阻礙職場靈氣流動！",
           choices: [
-            { text: "【當場整理】立刻將桌面收拾得一塵不染", health: -5, salary: +1000, log: "塵協理滿意地點頭，稱讚你態度端正。" },
+            { text: "【當場整理】一點不剩收拾得一塵不染", health: -5, salary: +1000, log: "塵協理滿意地點頭，稱讚你態度端正。" },
             { text: "【嚴肅辯稱】「協理，這是微道學中的『混亂秩序陣法』！」", health: 0, salary: -500, log: "塵協理冷笑一聲，扣除了少許績效。" }
           ]
         }
@@ -1272,7 +1298,6 @@
       ]
     };
 
-    // 💀 1.04 擴充：全量 11 種無厘頭荒謬死法（原4種完整保留，新增7種）
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
       "被長官畫的「未來公司上市分紅」大餅當場噎死。",
@@ -1291,6 +1316,114 @@
     let currentTrackIndex = 0;
     let isPlayingBGM = false;
     let isUiHidden = false;
+
+    // 🎨 1.05 新增：事件 Canvas 動畫繪圖引擎
+    let animFrameId = null;
+    let animParticles = [];
+
+    function initAnimCanvas() {
+      const canvas = document.getElementById("anim-canvas");
+      const ctx = canvas.getContext("2d");
+      
+      function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+      }
+      resize();
+      window.addEventListener("resize", resize);
+
+      for(let i=0; i<30; i++){
+        animParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 3 + 1,
+          speedY: Math.random() * 1.5 + 0.5,
+          speedX: (Math.random() - 0.5) * 1,
+          color: "#38bdf8"
+        });
+      }
+
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const w = canvas.width;
+        const h = canvas.height;
+        const time = Date.now() * 0.003;
+
+        // 🎨 依據當前事件類別渲染獨特背景與動畫場景
+        if (state.isTribulation) {
+          // ⚡ 天劫渡劫：紫閃電與震動
+          ctx.fillStyle = "#1e1b4b";
+          ctx.fillRect(0, 0, w, h);
+          if (Math.random() < 0.2) {
+            ctx.fillStyle = "rgba(238, 242, 255, 0.8)";
+            ctx.fillRect(0,0,w,h);
+          }
+          ctx.fillStyle = "#a855f7";
+          ctx.font = "bold 20px monospace";
+          ctx.fillText("⚡ 考 績 天 劫 審 查 中 ⚡", w/2 - 100, h/2 + 5);
+        } else if (state.currentCategory === "rare") {
+          // 💖 富婆包養 / 裁員：金幣降落與金光
+          ctx.fillStyle = "#2e1065";
+          ctx.fillRect(0, 0, w, h);
+          animParticles.forEach(p => {
+            ctx.fillStyle = "#facc15";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size + 1, 0, Math.PI*2);
+            ctx.fill();
+            p.y += p.speedY * 1.5;
+            if(p.y > h) p.y = -5;
+          });
+          ctx.fillStyle = "#fde047";
+          ctx.font = "bold 16px sans-serif";
+          ctx.fillText("💎 稀 有 隱 藏 機 緣 💎", w/2 - 70, 30);
+        } else if (state.currentCategory === "it6F") {
+          // 💻 資訊中心：藍白畫面 (BSOD) 與綠色程式碼流
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "#22c55e";
+          ctx.font = "12px monospace";
+          for(let i=0; i<5; i++) {
+            ctx.fillText("01010100 1101 IT_HELP_DESK_OK", 20, 25 + i*18);
+          }
+        } else if (state.currentCategory === "reception") {
+          // 👧 櫃台女神：粉紫柔光
+          ctx.fillStyle = "#4c0519";
+          ctx.fillRect(0, 0, w, h);
+          ctx.fillStyle = "#fb7185";
+          ctx.beginPath();
+          ctx.arc(w/2, h/2, 35 + Math.sin(time)*5, 0, Math.PI*2);
+          ctx.fill();
+          ctx.fillStyle = "#fff";
+          ctx.font = "bold 14px sans-serif";
+          ctx.fillText("✨ 櫃 台 門 面 結 界 ✨", w/2 - 60, h/2 + 5);
+        } else {
+          // 🏢 標準職場辦公室畫風（桌子 + 螢幕 + 粒子）
+          ctx.fillStyle = "#0f172a";
+          ctx.fillRect(0, 0, w, h);
+          
+          // 畫辦公桌
+          ctx.fillStyle = "#1e293b";
+          ctx.fillRect(w/2 - 40, h - 35, 80, 35);
+          // 螢幕
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillRect(w/2 - 20, h - 60, 40, 25);
+          ctx.fillStyle = "#64748b";
+          ctx.fillRect(w/2 - 4, h - 35, 8, 5);
+
+          // 粒子動畫
+          animParticles.forEach(p => {
+            ctx.fillStyle = p.color;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            p.y += p.speedY;
+            if (p.y > h) p.y = -5;
+          });
+        }
+
+        animFrameId = requestAnimationFrame(render);
+      }
+
+      render();
+    }
 
     function initAudio() {
       const bgm = document.getElementById("bgm");
@@ -1445,7 +1578,7 @@
       if (state.salary > saveData.maxSalaryEver) saveData.maxSalaryEver = state.salary;
       localStorage.setItem("work_xiuxian_save", JSON.stringify(saveData));
 
-      const yearsWorked = Math.floor(state.months / 6); // 👈 1.04 履歷表同步改為按6次過1年
+      const yearsWorked = Math.floor(state.months / 6);
       const originNames = { rich: "富家子弟 🏰", normal: "平民百姓 🏠", beggar: "街頭乞丐 🪨" };
 
       const resumeContent = `
@@ -1550,6 +1683,7 @@
         }
       }
 
+      state.currentCategory = selectedCategory;
       const pool = categorizedEvents[selectedCategory];
       return pool[Math.floor(Math.random() * pool.length)];
     }
@@ -1557,9 +1691,9 @@
     function nextTurn() {
       if (state.isDead) return;
 
+      state.isTribulation = false;
       state.months++;
 
-      // ⏱️ 1.04 調整：點擊 6 次過 1 年 (每 6 次增長 1 歲與發放年終)
       if (state.months > 0 && state.months % 6 === 0) {
         state.age++;
         const yearsWorked = Math.floor(state.months / 6);
@@ -1572,17 +1706,18 @@
 
       let randomEvent;
 
-      // ⏱️ 1.04 同步調整保底時機 (30次決策等同約5年)
       if (state.months === 30 && !state.hasTriggered5YearChengDong) {
         state.hasTriggered5YearChengDong = true;
+        state.currentCategory = "chengDong";
         randomEvent = chengDong5YearGuaranteeEvent;
       } 
       else if (state.realmIndex >= 2 && !state.hasTriggeredGroupLeaderChengDong) {
         state.hasTriggeredGroupLeaderChengDong = true;
+        state.currentCategory = "chengDong";
         randomEvent = chengDongGroupLeaderGuaranteeEvent;
       }
-      // ⏱️ 1.04 摸魚事件調整為每 18 次決策 (約每 3 年) 觸發一次
       else if (state.months > 0 && state.months % 18 === 0) {
+        state.currentCategory = "daily";
         randomEvent = periodicSlackingEvent;
       } 
       else {
@@ -1661,6 +1796,7 @@
     }
 
     function triggerTribulation() {
+      state.isTribulation = true;
       const nextRealm = realms[state.realmIndex + 1];
       document.getElementById("event-text").innerHTML = `⚡ <b>【考績渡劫啟動】</b><br>評估升任為 <b>${nextRealm.name}</b>！`;
       
@@ -1705,7 +1841,9 @@
         hasTriggered5YearChengDong: false,
         hasTriggeredGroupLeaderChengDong: false,
         scapegoatCount: 0,
-        slackCount: 0
+        slackCount: 0,
+        currentCategory: "daily",
+        isTribulation: false
       };
       document.getElementById("origin-modal").style.display = "flex";
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
@@ -1714,6 +1852,7 @@
     window.onload = () => {
       initAudio();
       initWeatherEffect();
+      initAnimCanvas(); // 🎨 初始化 1.05 動畫視窗
     };
   </script>
 </body>
