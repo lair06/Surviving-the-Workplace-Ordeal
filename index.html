@@ -194,6 +194,72 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
+    /* 🌫️ 1.05 新增：職場迷霧尺規專用樣式 */
+    .fog-ruler-container {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+    }
+
+    .ruler-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .ruler-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: #1e293b;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #475569;
+      margin-bottom: 8px;
+    }
+
+    .ruler-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+      box-shadow: 0 0 8px #38bdf8;
+      transition: width 0.4s ease;
+    }
+
+    .ruler-steps {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .ruler-step-item {
+      font-size: 0.72rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      background: rgba(30, 41, 59, 0.6);
+      color: #64748b;
+      border: 1px solid #334155;
+    }
+
+    .ruler-step-item.unlocked {
+      color: #cbd5e1;
+      border-color: #475569;
+    }
+
+    .ruler-step-item.active {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      border-color: #38bdf8;
+      font-weight: bold;
+      box-shadow: 0 0 6px rgba(56, 189, 248, 0.4);
+    }
+
     .stats-panel {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -374,9 +440,8 @@
 </head>
 <body>
 
-  <div class="version-tag">v1.04</div>
+  <div class="version-tag">v1.05</div>
 
-  <!-- 🏆 成就總覽 Modal -->
   <div id="achievements-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2 style="color: #facc15; margin-bottom: 10px;">🏆 社畜成就勳章館 🏆</h2>
@@ -388,7 +453,6 @@
     </div>
   </div>
 
-  <!-- 📜 終局履歷表 Modal -->
   <div id="resume-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <h2 style="color: #38bdf8; margin-bottom: 5px;">📜 職場修仙生涯履歷表 📜</h2>
@@ -450,6 +514,18 @@
         <div class="subtitle">— 幹到退休飛昇，抑或是過勞化身怨靈？ —</div>
       </div>
 
+      <!-- 🌫️ 1.05 新增：職場迷霧尺規面板 -->
+      <div class="fog-ruler-container">
+        <div class="ruler-header">
+          <span>🌫️ 職場修仙天梯進度</span>
+          <span id="ruler-progress-text">0%</span>
+        </div>
+        <div class="ruler-bar-bg">
+          <div id="ruler-bar-fill" class="ruler-bar-fill"></div>
+        </div>
+        <div id="ruler-steps-container" class="ruler-steps"></div>
+      </div>
+
       <div class="stats-panel">
         <div class="stat-item">出身：<span id="origin-name">未選擇</span></div>
         <div class="stat-item">境界：<span id="realm">試用實習生</span></div>
@@ -465,14 +541,18 @@
   </div>
 
   <script>
+    // 🚀 1.05 新增 3 個無厘頭職稱，擴充至 10 個境界
     const realms = [
       { name: "試用實習生", minSalary: 28000, nextSalary: 35000 },
       { name: "扣血社畜", minSalary: 35000, nextSalary: 48000 },
       { name: "萬年組長", minSalary: 48000, nextSalary: 65000 },
       { name: "甩鍋經理", minSalary: 65000, nextSalary: 90000 },
-      { name: "畫餅總監", minSalary: 90000, nextSalary: 150000 },
-      { name: "資深顧問 (回聘)", minSalary: 150000, nextSalary: 250000 },
-      { name: "萬年老顧問 (幹到死)", minSalary: 250000, nextSalary: Infinity }
+      { name: "畫餅總監", minSalary: 90000, nextSalary: 120000 },
+      { name: "會議室霸主", minSalary: 120000, nextSalary: 160000 },  // 🆕 新增
+      { name: "氣氛組副總", minSalary: 160000, nextSalary: 210000 },  // 🆕 新增
+      { name: "資深顧問 (回聘)", minSalary: 210000, nextSalary: 280000 },
+      { name: "門面吉祥物", minSalary: 280000, nextSalary: 380000 },  // 🆕 新增
+      { name: "萬年老顧問 (幹到死)", minSalary: 380000, nextSalary: Infinity }
     ];
 
     const achievementsList = [
@@ -500,7 +580,8 @@
       hasTriggered5YearChengDong: false,
       hasTriggeredGroupLeaderChengDong: false,
       scapegoatCount: 0,
-      slackCount: 0
+      slackCount: 0,
+      unlockedRealms: [0] // 👈 1.05 新增：已解鎖的職位 index 紀錄
     };
 
     function getSaveData() {
@@ -557,6 +638,7 @@
         state.salary = 48000;
         state.realmIndex = 1;
         state.health = 100;
+        if (!state.unlockedRealms.includes(1)) state.unlockedRealms.push(1);
         addLog("🏰 【富家子弟】開局！帶著家族資源空降公司，初始修為大幅提升！");
       } else if (type === "beggar") {
         state.salary = 22000;
@@ -816,7 +898,7 @@
         {
           text: "幕僚檢督人「塵協理」突襲查哨辦公桌，質疑你的桌面雜物過多會阻礙職場靈氣流動！",
           choices: [
-            { text: "【當場整理】立刻將桌面收拾得一塵不染", health: -5, salary: +1000, log: "塵協理滿意地點頭，稱讚你態度端正。" },
+            { text: "【當場整理】一點不剩收拾得一塵不染", health: -5, salary: +1000, log: "塵協理滿意地點頭，稱讚你態度端正。" },
             { text: "【嚴肅辯稱】「協理，這是微道學中的『混亂秩序陣法』！」", health: 0, salary: -500, log: "塵協理冷笑一聲，扣除了少許績效。" }
           ]
         }
@@ -1267,12 +1349,11 @@
     const chengDongGroupLeaderGuaranteeEvent = {
       text: "⚡ <b>【高階道心開導：丞董的祝福】</b><br>恭喜你順利渡劫晉升為【萬年組長】！人資「丞董」特別到你座位前致意：「恭喜升官！踏入組長境界後，管理與背鍋壓力非同小可，記得適時給自己留條退路。」",
       choices: [
-        { text: "【領悟職場退路學】虛心汲取丞董傳授的高階心法", health: +20, salary: +2500, log: "領悟了退路學真諦，管理壓力瞬間釋放，氣息大增！" },
+        { text: "【領悟職場退路学】虛心汲取丞董傳授的高階心法", health: +20, salary: +2500, log: "領悟了退路學真諦，管理壓力瞬間釋放，氣息大增！" },
         { text: "【請教管理之道】請教如何帶領下屬與向上管理", health: -5, salary: +3500, log: "丞董傾囊相授，你的管理修為獲得極大提升！" }
       ]
     };
 
-    // 💀 1.04 擴充：全量 11 種無厘頭荒謬死法（原4種完整保留，新增7種）
     const absurdDeaths = [
       "在 6F 洗手間蹲到雙腳麻痺，不幸化身職場加班怨靈。",
       "被長官畫的「未來公司上市分紅」大餅當場噎死。",
@@ -1397,6 +1478,44 @@
       render();
     }
 
+    // 🌫️ 1.05 新增：職場迷霧尺規更新邏輯
+    function updateFogRuler() {
+      const currentRealm = realms[state.realmIndex];
+      const stepsContainer = document.getElementById("ruler-steps-container");
+      stepsContainer.innerHTML = "";
+
+      // 渲染橫向尺規標籤
+      realms.forEach((r, idx) => {
+        const step = document.createElement("div");
+        const isUnlocked = state.unlockedRealms.includes(idx);
+        const isActive = idx === state.realmIndex;
+
+        step.className = `ruler-step-item ${isUnlocked ? 'unlocked' : ''} ${isActive ? 'active' : ''}`;
+        
+        // 未解鎖的顯示迷霧標籤 🔒 ???
+        if (isUnlocked) {
+          step.innerText = `${idx + 1}. ${r.name}`;
+        } else {
+          step.innerText = `${idx + 1}. 🔒 ???`;
+        }
+
+        stepsContainer.appendChild(step);
+      });
+
+      // 計算目前薪水到下個門檻的填滿比例
+      let progress = 0;
+      if (currentRealm.nextSalary === Infinity) {
+        progress = 100;
+      } else {
+        const base = currentRealm.minSalary;
+        const target = currentRealm.nextSalary;
+        progress = Math.min(100, Math.max(0, Math.floor(((state.salary - base) / (target - base)) * 100)));
+      }
+
+      document.getElementById("ruler-bar-fill").style.width = `${progress}%`;
+      document.getElementById("ruler-progress-text").innerText = `晉升進度: ${progress}%`;
+    }
+
     function updateUI() {
       const originNames = { rich: "富家子弟 🏰", normal: "平民百姓 🏠", beggar: "街頭乞丐 🪨" };
       document.getElementById("origin-name").innerText = originNames[state.origin];
@@ -1406,6 +1525,7 @@
       document.getElementById("max-age").innerText = state.maxAge;
       document.getElementById("health").innerText = state.health;
 
+      updateFogRuler(); // 👈 更新迷霧尺規
       checkStatus();
     }
 
@@ -1445,7 +1565,7 @@
       if (state.salary > saveData.maxSalaryEver) saveData.maxSalaryEver = state.salary;
       localStorage.setItem("work_xiuxian_save", JSON.stringify(saveData));
 
-      const yearsWorked = Math.floor(state.months / 6); // 👈 1.04 履歷表同步改為按6次過1年
+      const yearsWorked = Math.floor(state.months / 6);
       const originNames = { rich: "富家子弟 🏰", normal: "平民百姓 🏠", beggar: "街頭乞丐 🪨" };
 
       const resumeContent = `
@@ -1559,7 +1679,6 @@
 
       state.months++;
 
-      // ⏱️ 1.04 調整：點擊 6 次過 1 年 (每 6 次增長 1 歲與發放年終)
       if (state.months > 0 && state.months % 6 === 0) {
         state.age++;
         const yearsWorked = Math.floor(state.months / 6);
@@ -1572,7 +1691,6 @@
 
       let randomEvent;
 
-      // ⏱️ 1.04 同步調整保底時機 (30次決策等同約5年)
       if (state.months === 30 && !state.hasTriggered5YearChengDong) {
         state.hasTriggered5YearChengDong = true;
         randomEvent = chengDong5YearGuaranteeEvent;
@@ -1581,7 +1699,6 @@
         state.hasTriggeredGroupLeaderChengDong = true;
         randomEvent = chengDongGroupLeaderGuaranteeEvent;
       }
-      // ⏱️ 1.04 摸魚事件調整為每 18 次決策 (約每 3 年) 觸發一次
       else if (state.months > 0 && state.months % 18 === 0) {
         randomEvent = periodicSlackingEvent;
       } 
@@ -1675,6 +1792,9 @@
         const successRate = state.health / 100;
         if (Math.random() < successRate) {
           state.realmIndex++;
+          if (!state.unlockedRealms.includes(state.realmIndex)) {
+            state.unlockedRealms.push(state.realmIndex); // 👈 升官解鎖新迷霧標籤
+          }
           if (state.realmIndex >= 2) unlockAchievement("promoted");
           addLog(`✨ 渡劫成功！升任為【${nextRealm.name}】！`);
           state.salary = Math.floor(state.salary * 1.1);
@@ -1705,7 +1825,8 @@
         hasTriggered5YearChengDong: false,
         hasTriggeredGroupLeaderChengDong: false,
         scapegoatCount: 0,
-        slackCount: 0
+        slackCount: 0,
+        unlockedRealms: [0]
       };
       document.getElementById("origin-modal").style.display = "flex";
       document.getElementById("game-log").innerHTML = "重新投胎...<br>";
